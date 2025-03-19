@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "597455666151",
+    "project_id": "mi-laboratorio-10c78",
+    "storage_bucket": "mi-laboratorio-10c78.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:597455666151:android:cbafee832e8b4619909b42",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBASjK72dQhOG5VaJkmHqKbI_xvX22pTh0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
