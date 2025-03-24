@@ -1,3 +1,6 @@
+import 'package:app/models/register_user.dart';
+import 'package:app/screens/dashboard_screen.dart';
+import 'package:app/services/register_user_service.dart';
 import 'package:app/widgets/custom_input.dart';
 import 'package:flutter/material.dart';
 
@@ -10,8 +13,10 @@ class RegisterUserScreen extends StatefulWidget {
 }
 
 class _RegisterUserScreen extends State<RegisterUserScreen> {
+  final RegisterUserService registerService = RegisterUserService();
   bool isLoading = false;
   bool _obscureText = true;
+  bool isError = false;
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController lastnameController = TextEditingController();
@@ -20,6 +25,35 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController contryController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  void _register() async {
+    setState(() {
+      isLoading = true;
+    });
+    RegisterUser user = RegisterUser(
+      name: nameController.text,
+      lastName: lastnameController.text,
+      ci: ciController.text,
+      contry: contryController.text,
+      email: emailController.text,
+      phone: phoneController.text,
+      password: passwordController.text,
+    );
+
+    bool success = await registerService.register(user);
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (success) {
+      Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +145,7 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
                     label: Text('Cancelar'),
                   ),
                   ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: _register,
                     icon: Icon(Icons.create),
                     label: Text('Crear cuenta'),
                   ),

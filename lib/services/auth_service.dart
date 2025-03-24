@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:app/config/env_config.dart';
 import 'package:app/storage/token_storage.dart';
 import 'package:app/utils/http_code.dart';
@@ -8,24 +7,36 @@ import 'package:http/http.dart' as http;
 
 class AuthService {
   final _storage = TokenStorage();
+
   Future<bool> login(Login user) async {
-    // await Future.delayed(Duration(seconds: 2));
     try {
-      var url = Uri.https(EnvConfig.apiUrl, 'whatsit/create');
+      var url = Uri.parse('${EnvConfig.apiUrl}/auth');
+
+      // Realiza la solicitud POST con los datos correctos
       var response = await http.post(
         url,
-        body: {'name': 'doodle', 'color': 'blue'},
+        body: {
+          'email': user.email,
+          'password': user.password,
+        }, // Usa los datos del usuario
       );
-      return true;
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      // Verificar el código de estado HTTP
+      if (response.statusCode == HttpCode.OK) {
+        print('Conexión exitosa');
+        return true;
+      } else {
+        print('Error en la conexión. Código: ${response.statusCode}');
+        return false;
+      }
     } catch (e) {
-      print(e);
+      // Manejo de errores de conexión
+      print('Error de conexión: $e');
+      return false;
     }
-    // log(response.toString());
-    // if (user.email == 'admin@gmail.com' && user.password == 'admin') {
-    //   return true;
-    // }
-    // return false;
-    return false;
   }
 
   Future<String?> ValidateAccessToken() async {
