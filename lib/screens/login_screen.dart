@@ -1,8 +1,10 @@
 import 'package:app/screens/dashboard_screen.dart';
+import 'package:app/screens/send_to_email_screen.dart';
 import 'package:app/services/facebook_auth_service.dart';
 import 'package:app/services/google_auth_service.dart';
 // import 'package:app/services/twitter_auth_service.dart';
 import 'package:app/widgets/custom_divider.dart';
+import 'package:app/widgets/sample_card.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../models/login.dart';
@@ -118,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       175,
                       // ignore: deprecated_member_use
                     ).withOpacity(0.6),
-                    child: _SampleCard(
+                    child: SampleCard(
                       cardName: 'Correo electrónico o contraseña es incorrecto',
                     ),
                   ),
@@ -173,7 +175,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Text('Ingresar invitado'),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SendToEmailScreen(),
+                          ),
+                        );
+                      },
                       child: const Text('¿Olvidó su contraseña?'),
                     ),
                   ],
@@ -247,25 +256,4 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   sendTokenToBackend(String token) {}
-}
-
-class _SampleCard extends StatelessWidget {
-  const _SampleCard({required this.cardName});
-  final String cardName;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 90,
-      child: Center(
-        child: Text(
-          cardName,
-          style: TextStyle(
-            color: const Color.fromARGB(255, 225, 0, 0),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
 }

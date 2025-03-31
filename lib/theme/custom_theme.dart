@@ -48,21 +48,40 @@ class CustomTheme {
         cursorColor:
             themeMode == Mode.lightMode
                 ? colorScheme.textLight
-                : colorScheme.textDark, // Color del cursor
-        // ignore: deprecated_member_use
+                : colorScheme.textDark,
         selectionColor:
             themeMode == Mode.lightMode
-                // ignore: deprecated_member_use
                 ? colorScheme.textLight.withOpacity(0.5)
-                // ignore: deprecated_member_use
-                : colorScheme.textDark.withOpacity(0.5), // Color de selección
+                : colorScheme.textDark.withOpacity(0.5),
         selectionHandleColor:
             themeMode == Mode.lightMode
                 ? colorScheme.textLight
-                : colorScheme.textDark, // Color del manejador de selección
+                : colorScheme.textDark,
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: colorScheme.primary,
+      ),
+      textTheme: TextTheme(
+        bodyLarge: TextStyle(
+          color:
+              themeMode == Mode.lightMode
+                  ? colorScheme.textLight
+                  : colorScheme.textDark,
+        ),
+        bodyMedium: TextStyle(
+          color:
+              themeMode == Mode.lightMode
+                  ? colorScheme.textLight
+                  : colorScheme.textDark,
+          fontWeight: FontWeight.bold,
+        ),
+        titleMedium: TextStyle(
+          color:
+              themeMode == Mode.lightMode
+                  ? colorScheme.textLight
+                  : colorScheme.textDark,
+          fontStyle: FontStyle.italic,
+        ),
       ),
     ));
   }

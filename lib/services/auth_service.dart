@@ -24,7 +24,7 @@ class AuthService {
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
-      // Verificar el código de estado HTTP
+      await Future.delayed(Duration(seconds: 2));
       if (response.statusCode == HttpCode.OK) {
         print('Conexión exitosa');
         return true;

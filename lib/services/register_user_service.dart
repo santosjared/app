@@ -6,15 +6,13 @@ import 'package:http/http.dart' as http;
 class RegisterUserService {
   Future<bool> register(RegisterUser user) async {
     try {
-      var url = Uri.parse('${EnvConfig.apiUrl}/users');
+      var url = Uri.parse('${EnvConfig.apiUrl}/clients');
       var response = await http.post(
         url,
         body: {
           'name': user.name,
           'lastName': user.lastName,
           'email': user.email,
-          'ci': user.ci,
-          'contry': user.contry,
           'phone': user.phone,
           'password': user.password,
         },
