@@ -44,7 +44,11 @@ class _SendToEmail extends State<SendToEmailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppbar(title: 'Recuperar Contraseña', path: '/login'),
+      appBar: CustomAppbar(
+        title: 'Recuperar Contraseña',
+        path: '/login',
+        loading: false,
+      ),
       body: Padding(
         padding: EdgeInsets.all(10.0),
         child: Column(

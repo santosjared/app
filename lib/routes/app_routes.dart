@@ -6,6 +6,7 @@ import 'package:app/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 
 class AppRoutes {
+  static bool isAuthenticated = false;
   static Route<dynamic> Routes(RouteSettings settings) {
     switch (settings.name) {
       case "/splash":

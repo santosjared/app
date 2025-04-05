@@ -9,22 +9,18 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final AuthService auth = AuthService();
   @override
   void initState() {
     super.initState();
-    _checkAuth();
+    _initApp();
   }
 
-  void _checkAuth() async {
-    final String? isAuthenticated = await AuthService().ValidateAccessToken();
-
-    await Future.delayed(Duration(seconds: 2)); // Simula carga
-
+  void _initApp() async {
+    bool access = await auth.ValidateAccessToApp();
+    await Future.delayed(Duration(seconds: 2));
     if (mounted) {
-      Navigator.pushReplacementNamed(
-        context,
-        isAuthenticated == null ? "/login" : "/",
-      );
+      Navigator.pushReplacementNamed(context, access ? '/' : '/login');
     }
   }
 

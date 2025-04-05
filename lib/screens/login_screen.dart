@@ -2,6 +2,7 @@ import 'package:app/screens/dashboard_screen.dart';
 import 'package:app/screens/send_to_email_screen.dart';
 import 'package:app/services/facebook_auth_service.dart';
 import 'package:app/services/google_auth_service.dart';
+import 'package:app/theme/color_scheme.dart';
 // import 'package:app/services/twitter_auth_service.dart';
 import 'package:app/widgets/custom_divider.dart';
 import 'package:app/widgets/sample_card.dart';
@@ -26,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   bool _obscureText = true;
   bool isError = false;
+  bool rememberMe = true;
 
   void _login() async {
     isError = false;
@@ -38,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       password: passwordController.text,
     );
 
-    bool success = await authService.login(user);
+    bool success = await authService.login(user, rememberMe);
 
     setState(() {
       isLoading = false;
@@ -48,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         // ignore: use_build_context_synchronously
         context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        MaterialPageRoute(builder: (context) => DashboardScreen()),
       );
     } else {
       isError = true;
@@ -57,8 +59,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> loginWithGoogle() async {
     final token = await GoogleAuthService().signInWithGoogle();
+    print(token);
     if (token != null) {
-      await sendTokenToBackend(token);
+      // await sendTokenToBackend(token);
     }
   }
 
@@ -95,19 +98,27 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      // color: Palette.lightPrimary,
+                      color: colorScheme.primary,
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  'Denuncia cualquier hecho delictivo de forma rápida y segura. '
-                  'Nuestra plataforma está diseñada para brindarte un acceso directo a las autoridades.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    // color: Palette.lightPrimary,
-                    fontWeight: FontWeight.bold,
+                Center(
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 240.0,
+                    height: 240.0,
+                    fit: BoxFit.cover,
+                    errorBuilder: (
+                      BuildContext context,
+                      Object exception,
+                      StackTrace? stackTrace,
+                    ) {
+                      return const Text(
+                        'Denuncia cualquier hecho delictivo de forma rápida y segura. '
+                        'Nuestra plataforma está diseñada para brindarte un acceso directo a las autoridades.',
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -163,16 +174,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   obscureText: _obscureText,
                 ),
-
-                // Botón de login y enlaces adicionales
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/');
-                      },
-                      child: const Text('Ingresar invitado'),
+                    Row(
+                      children: [
+                        Text('Recuérdame'),
+                        Checkbox(
+                          value: rememberMe,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              rememberMe = value!;
+                            });
+                          },
+                        ),
+                      ],
                     ),
                     TextButton(
                       onPressed: () {
@@ -226,8 +242,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 10),
-
-                // Enlace de registro
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -255,5 +269,5 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  sendTokenToBackend(String token) {}
+  sendTokenToBackend(String? token) {}
 }

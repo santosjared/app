@@ -1,3 +1,5 @@
+import 'package:app/services/camare_service.dart';
+import 'package:app/services/galery_service.dart';
 import 'package:app/widgets/custom_appbar.dart';
 import 'package:flutter/material.dart';
 
@@ -12,7 +14,8 @@ class ComplaintsScreen extends StatefulWidget {
 class _ComplaintsScreenState extends State<ComplaintsScreen> {
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController placeController = TextEditingController();
-  // final ImagePicker _picker = ImagePicker();
+  final GaleryService galeryService = GaleryService();
+  final CamareService camareService = CamareService();
 
   String? selectedComplaint;
   String? selectedAggressor;
@@ -39,18 +42,84 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     'Otro',
   ];
 
-  // Future<void> _pickImage(ImageSource source) async {
-  //   final XFile? image = await _picker.pickImage(source: source);
-  //   if (image != null) {
-  //     // Aquí puedes manejar la imagen seleccionada
-  //     print("Imagen seleccionada: ${image.path}");
-  //   }
-  // }
+  void _showMediaOptions(BuildContext context, String tipo) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo),
+              title: Text('Foto desde $tipo'),
+              onTap: () async {
+                Navigator.pop(context);
+                if (tipo == 'Galería') {
+                  final image = await galeryService.ImageFromFallery();
+                  if (image != null) {
+                    print(image);
+                  }
+                } else {
+                  camareService.ImageFromCamera();
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam),
+              title: Text('Video desde $tipo'),
+              onTap: () async {
+                Navigator.pop(context);
+                if (tipo == 'Galería') {
+                  final video = await galeryService.VideoFromGallery();
+                  if (video != null) {
+                    print(video);
+                  }
+                } else {
+                  camareService.VideoFromCamera();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showMediaOptionsUbication(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.location_on),
+              title: Text('Ubicación en tiempo real '),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.location_searching),
+              title: Text('Ubicación actual'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppbar(title: 'Realizar denuncias', path: '/'),
+      appBar: CustomAppbar(
+        title: 'Realizar denuncias',
+        path: '/',
+        loading: false,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: SingleChildScrollView(
@@ -119,6 +188,12 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
               ),
               const SizedBox(height: 18),
               TextField(
+                controller: descriptionController,
+                decoration: const InputDecoration(labelText: 'Descripción'),
+                maxLines: 4,
+              ),
+              const SizedBox(height: 18),
+              TextField(
                 controller: placeController,
                 decoration: const InputDecoration(
                   labelText: 'Lugar del hecho',
@@ -126,11 +201,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(labelText: 'Descripción'),
-                maxLines: 4,
-              ),
+              Divider(),
             ],
           ),
         ),
@@ -148,36 +219,56 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
             ),
           ],
         ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Colors.blue,
-          unselectedItemColor: Colors.grey,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          onTap: (index) {
-            if (index == 0) {
-              // _pickImage(ImageSource.gallery); // Abre la galería
-            } else if (index == 1) {
-              // _pickImage(ImageSource.camera); // Abre la cámara
-            } else if (index == 2) {
-              // ignore: avoid_print
-              print("Obtener ubicación"); // Implementar lógica de ubicación
-            } else if (index == 3) {
-              // ignore: avoid_print
-              print("Enviar formulario"); // Implementar lógica de envío
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.image), label: 'Galería'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.camera_alt),
-              label: 'Cámara',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Adjuntar',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.place),
-              label: 'Ubicación',
+            BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: Colors.blue,
+              currentIndex: 3,
+              unselectedItemColor: Colors.grey,
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+              onTap: (index) {
+                if (index == 0) {
+                  _showMediaOptions(context, 'Galería');
+                } else if (index == 1) {
+                  _showMediaOptions(context, 'Cámara');
+                } else if (index == 2) {
+                  _showMediaOptionsUbication(context);
+                  // ignore: avoid_print
+                  print("Obtener ubicación"); // Implementar lógica de ubicación
+                } else if (index == 3) {
+                  // ignore: avoid_print
+                  print("Enviar formulario"); // Implementar lógica de envío
+                }
+              },
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.image),
+                  label: 'Galería',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.camera_alt),
+                  label: 'Cámara',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.place),
+                  label: 'Ubicación',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.send),
+                  label: 'Enviar',
+                ),
+              ],
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.send), label: 'Enviar'),
           ],
         ),
       ),

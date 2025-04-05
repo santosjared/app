@@ -1,26 +1,43 @@
 {
   "project_info": {
-    "project_number": "597455666151",
-    "project_id": "mi-laboratorio-10c78",
-    "storage_bucket": "mi-laboratorio-10c78.firebasestorage.app"
+    "project_number": "452994909078",
+    "project_id": "appradiopatrulla110",
+    "storage_bucket": "appradiopatrulla110.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:597455666151:android:cbafee832e8b4619909b42",
+        "mobilesdk_app_id": "1:452994909078:android:745f4bc35efc8faed9d3b7",
         "android_client_info": {
           "package_name": "com.example.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "452994909078-j9ig25s6mr7nsg745usc9caovmupocth.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBASjK72dQhOG5VaJkmHqKbI_xvX22pTh0"
+          "current_key": "AIzaSyBMl7TRMYMIuL9gqqoIULZdyyC05CTL68Q"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "452994909078-j9ig25s6mr7nsg745usc9caovmupocth.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "452994909078-pb8evo5slcc42kjc7ve1ijgvp25di9bn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.app"
+              }
+            }
+          ]
         }
       }
     }

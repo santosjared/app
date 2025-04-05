@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:app/config/env_config.dart';
-import 'package:app/utils/http_code.dart';
 import 'package:http/http.dart' as http;
 
 class SendEmailService {
@@ -13,11 +14,8 @@ class SendEmailService {
       print('Response body: ${response.body}');
 
       await Future.delayed(Duration(seconds: 2));
-      if (response.statusCode == HttpCode.OK) {
-        return true;
-      } else {
-        return true;
-      }
+      if (response.statusCode == HttpStatus.ok) return true;
+      return false;
     } catch (e) {
       print('Error de Conexion: $e');
       return true;

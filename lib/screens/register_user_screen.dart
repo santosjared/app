@@ -1,22 +1,25 @@
+import 'package:app/models/login.dart';
 import 'package:app/models/register_user.dart';
-import 'package:app/screens/dashboard_screen.dart';
+import 'package:app/services/auth_service.dart';
 import 'package:app/services/register_user_service.dart';
-import 'package:app/widgets/custom_input.dart';
+import 'package:app/utils/validator.dart';
+import 'package:app/widgets/custom_appbar.dart';
 import 'package:flutter/material.dart';
 
 class RegisterUserScreen extends StatefulWidget {
   const RegisterUserScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _RegisterUserScreen createState() => _RegisterUserScreen();
 }
 
 class _RegisterUserScreen extends State<RegisterUserScreen> {
   final RegisterUserService registerService = RegisterUserService();
+  final AuthService authService = AuthService();
   bool isLoading = false;
   bool _obscureText = true;
   bool isError = false;
+  String? forceErrorText;
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController lastnameController = TextEditingController();
@@ -30,42 +33,62 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
     setState(() {
       isLoading = true;
     });
-    RegisterUser user = RegisterUser(
-      name: nameController.text,
-      lastName: lastnameController.text,
-      email: emailController.text,
-      phone: phoneController.text,
-      password: passwordController.text,
-    );
+    forceErrorText = null;
+    if (_formKey.currentState!.validate()) {
+      bool existsEmail = await registerService.checkEmail(emailController.text);
 
-    bool success = await registerService.register(user);
+      if (existsEmail) {
+        forceErrorText = 'El Correo electrónico ya se encuentra registrado.';
+        setState(() {
+          isLoading = false;
+        });
+      } else {
+        RegisterUser user = RegisterUser(
+          name: nameController.text,
+          lastName: lastnameController.text,
+          email: emailController.text,
+          phone: '+591${phoneController.text}',
+          password: passwordController.text,
+        );
 
-    setState(() {
-      isLoading = false;
-    });
+        bool success = await registerService.register(user);
 
-    if (success) {
-      Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
-      );
+        if (success) {
+          Login user = Login(
+            email: emailController.text,
+            password: passwordController.text,
+          );
+          bool isAutenticate = await authService.login(user, true);
+          Navigator.pushReplacementNamed(
+            context,
+            isAutenticate ? '/' : '/login',
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ha ocurrido un error al registrarse'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } else {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Registro de usuario'),
-        backgroundColor: Color.fromARGB(255, 0, 142, 150),
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/login');
-          },
-          icon: Icon(Icons.navigate_before),
-        ),
+      appBar: CustomAppbar(
+        title: 'Registro de usuario',
+        path: '/login',
+        loading: isLoading,
       ),
       body: Form(
         key: _formKey,
@@ -78,70 +101,196 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      CustomInputField(
-                        labelText: 'Nombres',
+                      TextFormField(
                         controller: nameController,
-                        prefixIcon: Icon(Icons.person_4),
+                        decoration: InputDecoration(
+                          labelText: 'Nombres',
+                          prefixIcon: Icon(Icons.person_4),
+                        ),
+                        validator: (value) {
+                          String? error = Validator.validate(value, [
+                            Validator.isRequired(
+                              message: 'El campo Nombres es Requerido.',
+                            ),
+                            Validator.isString(
+                              message:
+                                  'El campo Nombres deber ser una cadena de caracteres.',
+                            ),
+                            Validator.matches(
+                              RegExp(r'^[A-Za-z\s]+$'),
+                              message:
+                                  'El campo Nombres debe contener solo letras y espacio.',
+                            ),
+                            Validator.length(
+                              4,
+                              20,
+                              message:
+                                  'El campo Nombres debe ser como mínimo 4 y como máximo 20 caracteres.',
+                            ),
+                          ]);
+                          return error;
+                        },
                       ),
-                      CustomInputField(
-                        labelText: 'Apellidos',
+                      SizedBox(height: 10),
+                      TextFormField(
                         controller: lastnameController,
-                        prefixIcon: Icon(Icons.person_4),
+                        decoration: InputDecoration(
+                          labelText: 'Apellidos',
+                          prefixIcon: Icon(Icons.person_4),
+                        ),
+                        validator: (value) {
+                          String? error = Validator.validate(value, [
+                            Validator.isRequired(
+                              message: 'El campo Apellidos es Requerido.',
+                            ),
+                            Validator.isString(
+                              message:
+                                  'El campo Apellidos deber ser una cadena de caracteres.',
+                            ),
+                            Validator.matches(
+                              RegExp(r'^[A-Za-z\s]+$'),
+                              message:
+                                  'El campo Apellidos debe contener solo letras y espacio.',
+                            ),
+                            Validator.length(
+                              4,
+                              20,
+                              message:
+                                  'El campo Apellidos debe ser como mínimo 4 y como máximo 20 caracteres.',
+                            ),
+                          ]);
+                          return error;
+                        },
                       ),
-                      CustomInputField(
-                        labelText: 'Número de celular',
+                      SizedBox(height: 10),
+                      TextFormField(
                         controller: phoneController,
-                        prefixIcon: Icon(Icons.phone),
+                        decoration: InputDecoration(
+                          labelText: 'Número de celular',
+                          prefixIcon: Icon(Icons.phone),
+                        ),
+                        validator: (value) {
+                          String? error = Validator.validate(value, [
+                            Validator.isRequired(
+                              message:
+                                  'El campo Número de celular es Requerido.',
+                            ),
+                            Validator.matches(
+                              RegExp(r'^\d+$'),
+                              message: 'Debe introducir solo números',
+                            ),
+                            Validator.length(
+                              6,
+                              16,
+                              message:
+                                  'El campo Número de celular debe ser como mínimo 6 y como máximo 16 caracteres.',
+                            ),
+                          ]);
+                          return error;
+                        },
                       ),
-                      CustomInputField(
-                        labelText: 'Correo',
+                      SizedBox(height: 10),
+                      TextFormField(
                         controller: emailController,
-                        prefixIcon: Icon(Icons.email),
+                        forceErrorText: forceErrorText,
+                        decoration: InputDecoration(
+                          labelText: 'Correo electrónico',
+                          prefixIcon: Icon(Icons.email),
+                        ),
+                        validator: (value) {
+                          String? error = Validator.validate(value, [
+                            Validator.isRequired(
+                              message:
+                                  'El campo Correo electrónico es Requerido.',
+                            ),
+                            Validator.isString(
+                              message:
+                                  'El campo Correo electrónico deber ser una cadena de caracteres.',
+                            ),
+                            Validator.matches(
+                              RegExp(
+                                r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                              ),
+                              message:
+                                  'El campo Correo electrónico es de tipo email.',
+                            ),
+                            Validator.length(
+                              8,
+                              64,
+                              message:
+                                  'El campo Correo electrónico debe ser como mínimo 8 y como máximo 64 caracteres.',
+                            ),
+                          ]);
+                          return error;
+                        },
                       ),
-                      CustomInputField(
-                        labelText: 'Contraseña',
+                      SizedBox(height: 10),
+                      TextFormField(
                         controller: passwordController,
-                        prefixIcon: Icon(Icons.lock),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureText
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            // color: Palette.lightPrimary,
+                        decoration: InputDecoration(
+                          labelText: 'Contraseña',
+                          prefixIcon: Icon(Icons.lock),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureText
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              // color: Palette.lightPrimary,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureText = !_obscureText;
+                              });
+                            },
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _obscureText = !_obscureText;
-                            });
-                          },
                         ),
                         obscureText: _obscureText,
+                        validator: (value) {
+                          String? error = Validator.validate(value, [
+                            Validator.isRequired(
+                              message: 'El campo Contraseña es Requerido.',
+                            ),
+                            Validator.isString(
+                              message:
+                                  'El campo Contraseña deber ser una cadena de caracteres.',
+                            ),
+                            Validator.length(
+                              8,
+                              32,
+                              message:
+                                  'El campo Contraseña debe ser como mínimo 8 y como máximo 32 caracteres.',
+                            ),
+                          ]);
+                          return error;
+                        },
                       ),
+                      SizedBox(height: 30),
+                      if (isLoading) const CircularProgressIndicator(),
                     ],
                   ),
                 ),
               ),
-              // Botones fijos abajo
-              Padding(
-                padding: EdgeInsets.only(bottom: 60.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/login');
-                      },
-                      icon: Icon(Icons.cancel),
-                      label: Text('Cancelar'),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: _register,
-                      icon: Icon(Icons.create),
-                      label: Text('Crear cuenta'),
-                    ),
-                  ],
+              if (!isLoading)
+                Padding(
+                  padding: EdgeInsets.only(bottom: 60.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        icon: Icon(Icons.cancel),
+                        label: Text('Cancelar'),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _register,
+                        icon: Icon(Icons.create),
+                        label: Text('Crear cuenta'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),

@@ -47,6 +47,7 @@ class _sendToCode extends State<SendToCodeScreen> {
       appBar: CustomAppbar(
         title: 'Recuperar Contraseña',
         path: '/send_to_email',
+        loading: false,
       ),
       body: SingleChildScrollView(
         // Agregamos SingleChildScrollView

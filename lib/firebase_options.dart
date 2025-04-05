@@ -51,19 +51,20 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBASjK72dQhOG5VaJkmHqKbI_xvX22pTh0',
-    appId: '1:597455666151:android:cbafee832e8b4619909b42',
-    messagingSenderId: '597455666151',
-    projectId: 'mi-laboratorio-10c78',
-    storageBucket: 'mi-laboratorio-10c78.firebasestorage.app',
+    apiKey: 'AIzaSyBMl7TRMYMIuL9gqqoIULZdyyC05CTL68Q',
+    appId: '1:452994909078:android:745f4bc35efc8faed9d3b7',
+    messagingSenderId: '452994909078',
+    projectId: 'appradiopatrulla110',
+    storageBucket: 'appradiopatrulla110.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDhRvFewVB_fOxero4Zoe-zKstMEWM6B3g',
-    appId: '1:597455666151:ios:4bc619d41c2b6b5e909b42',
-    messagingSenderId: '597455666151',
-    projectId: 'mi-laboratorio-10c78',
-    storageBucket: 'mi-laboratorio-10c78.firebasestorage.app',
+    apiKey: 'AIzaSyCbIXIJO7G5A9AzQ1z-d33cOaxLmJ_s6Eg',
+    appId: '1:452994909078:ios:fa11df94bb41ee62d9d3b7',
+    messagingSenderId: '452994909078',
+    projectId: 'appradiopatrulla110',
+    storageBucket: 'appradiopatrulla110.firebasestorage.app',
+    iosClientId: '452994909078-pb8evo5slcc42kjc7ve1ijgvp25di9bn.apps.googleusercontent.com',
     iosBundleId: 'com.example.app',
   );
 
