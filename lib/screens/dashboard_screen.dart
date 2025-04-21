@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:app/services/auth_service.dart';
 import 'package:app/storage/user_storage.dart';
+import 'package:app/utils/getinials.dart';
 import 'package:app/widgets/type_complaints.dart';
 import 'package:flutter/material.dart';
 
@@ -49,6 +50,8 @@ class _DasboardScreen extends State<DashboardScreen> {
 
   get onChanged => null;
 
+  Widget content = TypeComplaints();
+
   @override
   Widget build(BuildContext context) {
     return _isloading
@@ -58,8 +61,18 @@ class _DasboardScreen extends State<DashboardScreen> {
             title: const Text('Inicio'),
             backgroundColor: Color.fromARGB(255, 0, 142, 150),
             foregroundColor: Colors.white,
+            actions: [
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  child: Text('Emergecia'),
+                ),
+              ),
+            ],
           ),
-          body: TypeComplaints(),
+          body: content,
           drawer: Drawer(
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.zero,
@@ -77,10 +90,7 @@ class _DasboardScreen extends State<DashboardScreen> {
                     children: [
                       CircleAvatar(
                         radius: 30,
-                        child: Text('AA'),
-                        // backgroundImage: user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                        //     ? NetworkImage(user.avatarUrl!)
-                        //     : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
+                        child: Text(Inials.getInials(_name, _lastName)),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -104,11 +114,21 @@ class _DasboardScreen extends State<DashboardScreen> {
                 ListTile(
                   leading: const Icon(Icons.account_circle),
                   title: Text('Perfil'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/profile');
+                  },
                 ),
                 Divider(),
                 ListTile(
                   leading: const Icon(Icons.home),
                   title: Text('Inicio'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      content = TypeComplaints();
+                    });
+                  },
                 ),
                 ListTile(
                   leading: const Icon(Icons.edit),
@@ -166,18 +186,6 @@ class _DasboardScreen extends State<DashboardScreen> {
               ],
             ),
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () {},
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            label: const Text(
-              'Emergencia',
-              style: TextStyle(fontSize: 20, color: Colors.white),
-            ),
-            icon: const Icon(Icons.emergency_outlined),
-          ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerFloat,
         );
   }
 }

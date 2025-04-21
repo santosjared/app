@@ -1,12 +1,13 @@
+import 'package:app/models/complaints_model.dart';
 import 'package:app/screens/complaints_screen.dart';
 import 'package:app/screens/dashboard_screen.dart';
 import 'package:app/screens/login_screen.dart';
+import 'package:app/screens/profile_screen.dart';
 import 'package:app/screens/register_user_screen.dart';
 import 'package:app/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 
 class AppRoutes {
-  static bool isAuthenticated = false;
   static Route<dynamic> Routes(RouteSettings settings) {
     switch (settings.name) {
       case "/splash":
@@ -18,7 +19,13 @@ class AppRoutes {
       case "/login":
         return MaterialPageRoute(builder: (_) => LoginScreen());
       case "/complaints":
-        return MaterialPageRoute(builder: (_) => ComplaintsScreen());
+        final args = settings.arguments as ComplaintsModel?;
+        return MaterialPageRoute(
+          builder: (_) => ComplaintsScreen(complaint: args),
+        );
+
+      case "/profile":
+        return MaterialPageRoute(builder: (_) => ProfileScreen());
       default:
         return MaterialPageRoute(
           builder:

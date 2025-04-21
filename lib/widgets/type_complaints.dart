@@ -1,53 +1,32 @@
+import 'package:app/models/complaints_model.dart';
+import 'package:app/services/complaints_service.dart';
 import 'package:app/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 
-class TypeComplaints extends StatelessWidget {
-  TypeComplaints({super.key});
+class TypeComplaints extends StatefulWidget {
+  const TypeComplaints({super.key});
 
-  final List<Map<String, String>> cardsData = [
-    {
-      "title": "Accidente de Tránsito",
-      "description":
-          "Es un suceso inesperado que ocurre en la vía pública y que involucra a vehículos, peatones u otros elementos relacionados con el tránsito. Este evento puede resultar en daños materiales, lesiones o incluso muertes.",
-      "image": "assets/images/transito.png",
-    },
-    {
-      "title": "Encendio",
-      "description":
-          "Es una combustión no controlada que se propaga en un área determinada, causando daños materiales, ambientales y, en algunos casos, pérdidas humanas. Puede ser provocado por factores naturales o por causas humanas.",
-      "image": "assets/images/encendio.png",
-    },
-    {
-      "title": "Personas en estado de ebriedad en vía pública",
-      "description":
-          "Las personas en estado de ebriedad en vía pública pueden representar un riesgo tanto para su seguridad como para la de los demás. La intoxicación por alcohol puede afectar la coordinación, el juicio y la capacidad de reacción, lo que puede llevar a accidentes, alteraciones del orden público o incluso actos de violencia.",
-      "image": "assets/images/ebriedad.png",
-    },
-    {
-      "title": "Persona Desaparecida",
-      "description":
-          "La desaparición puede ser voluntaria o involuntaria y puede estar relacionada con diversas causas, como accidentes, desorientación, secuestros, conflictos familiares o situaciones de riesgo.",
-      "image": "https://via.placeholder.com/150",
-    },
-    {
-      "title": "Riñas y peleas",
-      "description":
-          "Son confrontaciones físicas o verbales entre dos o más personas, generalmente originadas por desacuerdos, provocaciones o conflictos personales. Pueden ocurrir en espacios públicos o privados y, en algunos casos, derivar en lesiones o daños materiales.",
-      "image": "https://via.placeholder.com/150",
-    },
-    {
-      "title": "Robo",
-      "description":
-          "Es un delito que consiste en la apropiación ilegítima de un bien ajeno mediante el uso de la fuerza, violencia o intimidación. Se diferencia del hurto, que ocurre sin el uso de violencia o amenazas.",
-      "image": "https://via.placeholder.com/150",
-    },
-    {
-      "title": "Violencia",
-      "description":
-          "Es el uso intencional de la fuerza física, verbal o psicológica para causar daño, intimidar o someter a otra persona. Puede manifestarse en distintos ámbitos, como el familiar, escolar, social o laboral, y adoptar diversas formas, como la violencia física, emocional, sexual o económica.",
-      "image": "https://via.placeholder.com/150",
-    },
-  ];
+  @override
+  State<TypeComplaints> createState() => _TypeComplaints();
+}
+
+class _TypeComplaints extends State<TypeComplaints> {
+  final ComplaintsService complaintsService = ComplaintsService();
+  List<ComplaintsModel> typeComplaints = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadComplaints();
+  }
+
+  _loadComplaints() async {
+    final List<ComplaintsModel> fetchComplaints =
+        await complaintsService.getComplaints();
+    setState(() {
+      typeComplaints = fetchComplaints;
+    });
+  }
 
   String truncateText(String text, String title, int maxLength) {
     if (text.length + title.length > maxLength) {
@@ -73,18 +52,17 @@ class TypeComplaints extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount:
-              crossAxisCount, // Aquí se ajusta el número de columnas
+          crossAxisCount: crossAxisCount,
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           childAspectRatio: childAspectRatio / crossAxisCount,
         ),
-        itemCount: cardsData.length,
+        itemCount: typeComplaints.length,
         itemBuilder: (context, index) {
-          var card = cardsData[index];
+          var card = typeComplaints[index];
           String truncatedDescription = truncateText(
-            card['description']!,
-            card['title']!,
+            card.description,
+            card.name,
             180,
           );
           return Card(
@@ -100,8 +78,8 @@ class TypeComplaints extends StatelessWidget {
                     topLeft: Radius.circular(10),
                     topRight: Radius.circular(10),
                   ),
-                  child: Image.asset(
-                    card['image']!, // URL de la imagen
+                  child: Image.network(
+                    card.image,
                     width: double.infinity,
                     height: 210,
                     fit: BoxFit.fill,
@@ -119,7 +97,7 @@ class TypeComplaints extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    card['title']!,
+                    card.name,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -137,7 +115,13 @@ class TypeComplaints extends StatelessWidget {
                 Center(
                   child: CustomButton(
                     text: 'Realizar esta denuncia',
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(
+                        context,
+                        '/complaints',
+                        arguments: card,
+                      );
+                    },
                   ),
                 ),
               ],

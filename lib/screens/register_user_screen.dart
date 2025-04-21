@@ -1,7 +1,7 @@
 import 'package:app/models/login.dart';
-import 'package:app/models/register_user.dart';
+import 'package:app/models/user_data.dart';
 import 'package:app/services/auth_service.dart';
-import 'package:app/services/register_user_service.dart';
+import 'package:app/services/user_service.dart';
 import 'package:app/utils/validator.dart';
 import 'package:app/widgets/custom_appbar.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ class RegisterUserScreen extends StatefulWidget {
 }
 
 class _RegisterUserScreen extends State<RegisterUserScreen> {
-  final RegisterUserService registerService = RegisterUserService();
+  final UserService registerService = UserService();
   final AuthService authService = AuthService();
   bool isLoading = false;
   bool _obscureText = true;
@@ -43,7 +43,7 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
           isLoading = false;
         });
       } else {
-        RegisterUser user = RegisterUser(
+        UserData user = UserData(
           name: nameController.text,
           lastName: lastnameController.text,
           email: emailController.text,
