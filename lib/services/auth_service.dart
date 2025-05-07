@@ -17,7 +17,7 @@ class AuthService {
       if (remeberme) {
         TokenStorage.saveToken(
           response.data[Token.access.token],
-          response.data[Token.access.token],
+          response.data[Token.refresh.token],
         );
       }
       final userData = response.data['userData'] ?? {};

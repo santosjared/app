@@ -2,14 +2,8 @@ import 'package:flutter/material.dart';
 
 class CustomAppbar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final String path;
   final bool loading;
-  const CustomAppbar({
-    super.key,
-    required this.title,
-    required this.path,
-    required this.loading,
-  });
+  const CustomAppbar({super.key, required this.title, required this.loading});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +17,7 @@ class CustomAppbar extends StatelessWidget implements PreferredSizeWidget {
               ? null
               : IconButton(
                 onPressed: () {
-                  Navigator.pushReplacementNamed(context, path);
+                  Navigator.pop(context);
                 },
                 icon: Icon(Icons.navigate_before),
               ),

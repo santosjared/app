@@ -2,6 +2,7 @@ import 'package:app/Interceptors/auth_interceptor.dart';
 import 'package:app/config/http.dart';
 import 'package:app/constants/mode.dart';
 import 'package:app/routes/app_routes.dart';
+import 'package:app/screens/splash_screen.dart';
 import 'package:app/theme/custom_theme.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -29,8 +30,8 @@ class MyApp extends StatelessWidget {
       theme: CustomTheme().settingsTheme(Mode.lightMode),
       darkTheme: CustomTheme().settingsTheme(Mode.darkMode),
       themeMode: ThemeMode.system,
-      initialRoute: "/splash",
       onGenerateRoute: AppRoutes.Routes,
+      home: SplashScreen(), // 👈 Esto controla la navegación inicial
     );
   }
 }

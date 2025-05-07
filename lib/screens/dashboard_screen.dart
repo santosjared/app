@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:app/services/auth_service.dart';
 import 'package:app/storage/user_storage.dart';
 import 'package:app/utils/getinials.dart';
+import 'package:app/widgets/menu_wraper.dart';
 import 'package:app/widgets/type_complaints.dart';
 import 'package:flutter/material.dart';
 
@@ -16,6 +17,7 @@ class _DasboardScreen extends State<DashboardScreen> {
   String _name = '';
   String _lastName = '';
   String _email = '';
+  String _userId = '';
   bool _isloading = true;
   @override
   void initState() {
@@ -25,20 +27,23 @@ class _DasboardScreen extends State<DashboardScreen> {
 
   void _getUser() async {
     final String? userData = await UserStorage.getUser();
-
     if (userData != null) {
       final user = jsonDecode(userData) as Map<String, dynamic>;
       setState(() {
         _name = user['name'] ?? '';
         _lastName = user['lastName'] ?? '';
         _email = user['email'] ?? '';
+        _userId = user['userId'] ?? '';
         _isloading = false;
       });
     } else {
+      print(
+        'elselllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll',
+      );
       setState(() {
         _isloading = false;
       });
-      Navigator.pushReplacementNamed(context, '/splash');
+      // Navigator.pushReplacementNamed(context, '/splash');
     }
   }
 
@@ -50,7 +55,7 @@ class _DasboardScreen extends State<DashboardScreen> {
 
   get onChanged => null;
 
-  Widget content = TypeComplaints();
+  Widget _content = TypeComplaints();
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +77,7 @@ class _DasboardScreen extends State<DashboardScreen> {
               ),
             ],
           ),
-          body: content,
+          body: _content,
           drawer: Drawer(
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.zero,
@@ -90,7 +95,10 @@ class _DasboardScreen extends State<DashboardScreen> {
                     children: [
                       CircleAvatar(
                         radius: 30,
-                        child: Text(Inials.getInials(_name, _lastName)),
+                        child: Text(
+                          Inials.getInials(_name, _lastName),
+                          style: TextStyle(color: Colors.indigoAccent),
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -112,7 +120,7 @@ class _DasboardScreen extends State<DashboardScreen> {
                   ),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.account_circle),
+                  leading: const Icon(Icons.account_circle, color: Colors.teal),
                   title: Text('Perfil'),
                   onTap: () {
                     Navigator.pop(context);
@@ -121,17 +129,17 @@ class _DasboardScreen extends State<DashboardScreen> {
                 ),
                 Divider(),
                 ListTile(
-                  leading: const Icon(Icons.home),
+                  leading: const Icon(Icons.home, color: Colors.pink),
                   title: Text('Inicio'),
                   onTap: () {
                     Navigator.pop(context);
                     setState(() {
-                      content = TypeComplaints();
+                      _content = TypeComplaints();
                     });
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.edit),
+                  leading: const Icon(Icons.create, color: Colors.blueAccent),
                   title: Text('Realizar denucias'),
                   onTap: () {
                     Navigator.pop(context);
@@ -139,20 +147,75 @@ class _DasboardScreen extends State<DashboardScreen> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.send),
+                  leading: const Icon(Icons.send, color: Colors.blue),
+                  title: Text('Denuncias enviadas'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _content = MenuWraper(
+                        key: UniqueKey(),
+                        userId: _userId,
+                        status: null,
+                        title: 'Todas las denuncias',
+                      );
+                    });
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.playlist_add_check_circle,
+                    color: Colors.green,
+                  ),
                   title: Text('Denuncias aceptadas'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _content = MenuWraper(
+                        key: UniqueKey(),
+                        userId: _userId,
+                        status: 'accepted',
+                        title: 'Denuncias aceptadas',
+                      );
+                    });
+                  },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.error),
+                  leading: const Icon(
+                    Icons.query_builder,
+                    color: Colors.orange,
+                  ),
+                  title: Text('Denuncias en espera'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _content = MenuWraper(
+                        key: UniqueKey(),
+                        userId: _userId,
+                        status: 'waiting',
+                        title: 'Denuncias en espera',
+                      );
+                    });
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.error, color: Colors.red),
                   title: Text('Denuncias rechazadas'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _content = MenuWraper(
+                        key: UniqueKey(),
+                        userId: _userId,
+                        status: 'refused',
+                        title: 'Denuncias rechazadas',
+                      );
+                    });
+                  },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.history),
-                  title: Text('Historial de denuncias'),
-                ),
+
                 Divider(),
                 ListTile(
-                  leading: const Icon(Icons.settings),
+                  leading: const Icon(Icons.settings, color: Colors.blueGrey),
                   title: Text('Configuraciones'),
                 ),
                 Row(
@@ -177,7 +240,7 @@ class _DasboardScreen extends State<DashboardScreen> {
                 ),
                 Divider(),
                 ListTile(
-                  leading: const Icon(Icons.logout),
+                  leading: const Icon(Icons.logout, color: Colors.red),
                   title: const Text('Cerrar sesión'),
                   onTap: () {
                     _logout();

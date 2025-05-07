@@ -16,11 +16,7 @@ class _ResetPassword extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppbar(
-        title: 'Recuperar contraseña',
-        path: '/login',
-        loading: false,
-      ),
+      appBar: CustomAppbar(title: 'Recuperar contraseña', loading: false),
       body: Padding(
         padding: EdgeInsets.all(10.0),
         child: Column(

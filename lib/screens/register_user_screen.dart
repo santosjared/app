@@ -85,11 +85,7 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppbar(
-        title: 'Registro de usuario',
-        path: '/login',
-        loading: isLoading,
-      ),
+      appBar: CustomAppbar(title: 'Registro de usuario', loading: isLoading),
       body: Form(
         key: _formKey,
         child: Padding(

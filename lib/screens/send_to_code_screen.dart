@@ -44,11 +44,7 @@ class _sendToCode extends State<SendToCodeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppbar(
-        title: 'Recuperar Contraseña',
-        path: '/send_to_email',
-        loading: false,
-      ),
+      appBar: CustomAppbar(title: 'Recuperar Contraseña', loading: false),
       body: SingleChildScrollView(
         // Agregamos SingleChildScrollView
         padding: EdgeInsets.all(10.0),

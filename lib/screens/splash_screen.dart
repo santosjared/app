@@ -1,3 +1,5 @@
+import 'package:app/screens/dashboard_screen.dart';
+import 'package:app/screens/login_screen.dart';
 import 'package:app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
@@ -19,8 +21,14 @@ class _SplashScreenState extends State<SplashScreen> {
   void _initApp() async {
     bool access = await auth.ValidateAccessToApp();
     await Future.delayed(Duration(seconds: 2));
+
     if (mounted) {
-      Navigator.pushReplacementNamed(context, access ? '/' : '/login');
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => access ? DashboardScreen() : LoginScreen(),
+        ),
+        (route) => false,
+      );
     }
   }
 

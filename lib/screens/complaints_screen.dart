@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:app/models/complaints_client_model.dart';
 import 'package:app/models/complaints_model.dart';
 import 'package:app/models/kin_model.dart';
 import 'package:app/services/camera_service.dart';
@@ -6,10 +8,13 @@ import 'package:app/services/complaints_service.dart';
 import 'package:app/services/gallery_service.dart';
 import 'package:app/services/kin_service.dart';
 import 'package:app/services/location_service.dart';
+import 'package:app/storage/user_storage.dart';
+import 'package:app/utils/validator.dart';
 import 'package:app/widgets/custom_appbar.dart';
 import 'package:app/widgets/render_players.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ComplaintsScreen extends StatefulWidget {
   final ComplaintsModel? complaint;
@@ -29,13 +34,21 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   final KinService kinService = KinService();
 
   TextEditingController complaintsController = TextEditingController();
+  TextEditingController aggressorController = TextEditingController();
+  TextEditingController victimContoller = TextEditingController();
+  TextEditingController defaultcomplaintsController = TextEditingController();
+
+  final _formKey = GlobalKey<FormState>();
+  bool _loading = true;
+
+  String? _foreceText;
 
   ComplaintsModel? selectedComplaint;
-  String? selectedAggressor;
-  String? selectedVictim;
+  KinModel? selectedAggressor;
+  KinModel? selectedVictim;
 
   List<ComplaintsModel> typeComplaints = [];
-  List<KinModel> Kins = [];
+  List<KinModel> kins = [];
 
   @override
   void initState() {
@@ -49,31 +62,36 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     if (widget.complaint == null) {
       fetchComplaints = await complaintsService.getComplaints();
     }
-    setState(() {
-      if (widget.complaint != null) {
-        complaintsController = TextEditingController(
-          text: widget.complaint?.name,
-        );
-      }
-      typeComplaints = fetchComplaints;
-      Kins = fetchKins;
-    });
+    if (mounted) {
+      setState(() {
+        if (widget.complaint != null) {
+          selectedComplaint = widget.complaint;
+          defaultcomplaintsController = TextEditingController(
+            text: widget.complaint?.name,
+          );
+        }
+        typeComplaints = fetchComplaints;
+        kins = fetchKins;
+        _loading = false;
+      });
+    }
   }
 
-  final List<Map<String, String>> cardsdView = [];
+  final List<Map<String, dynamic>> cardsdView = [];
 
   void _showMediaOptions(BuildContext context, String tipo) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
       builder: (_) {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.photo),
+              leading: const Icon(Icons.photo, color: Colors.blueAccent),
               title: Text('Foto desde $tipo'),
               enabled:
-                  cardsdView.where((item) => item['tipo'] == 'image').length > 3
+                  cardsdView.where((item) => item['tipo'] == 'image').length > 2
                       ? false
                       : true,
               onTap: () async {
@@ -81,7 +99,12 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                 if (tipo == 'Galería') {
                   final image = await galleryService.imageFromGallery();
                   if (image != null) {
-                    if (image.length > 3) {
+                    if (image.length > 3 ||
+                        image.length +
+                                cardsdView
+                                    .where((item) => item['tipo'] == 'image')
+                                    .length >
+                            3) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Solo se permite como maximo 3 fotos'),
@@ -91,7 +114,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                     } else {
                       setState(() {
                         for (var imag in image) {
-                          cardsdView.add({'tipo': 'image', 'path': imag.path});
+                          cardsdView.add({'tipo': 'image', 'data': imag});
                         }
                       });
                     }
@@ -100,17 +123,17 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                   final imag = await camareService.imageFromCamera();
                   if (imag != null) {
                     setState(() {
-                      cardsdView.add({'tipo': 'image', 'path': imag.path});
+                      cardsdView.add({'tipo': 'image', 'data': imag});
                     });
                   }
                 }
               },
             ),
             ListTile(
-              leading: const Icon(Icons.videocam),
+              leading: const Icon(Icons.videocam, color: Colors.pinkAccent),
               title: Text('Video desde $tipo'),
               enabled:
-                  cardsdView.where((item) => item['tipo'] == 'video').length > 1
+                  cardsdView.where((item) => item['tipo'] == 'video').isNotEmpty
                       ? false
                       : true,
               onTap: () async {
@@ -119,14 +142,14 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                   final video = await galleryService.videoFromGallery();
                   if (video != null) {
                     setState(() {
-                      cardsdView.add({'tipo': 'video', 'path': video.path});
+                      cardsdView.add({'tipo': 'video', 'data': video});
                     });
                   }
                 } else {
                   final cameVideo = await camareService.videoFromCamera();
                   if (cameVideo != null) {
                     setState(() {
-                      cardsdView.add({'tipo': 'video', 'path': cameVideo.path});
+                      cardsdView.add({'tipo': 'video', 'data': cameVideo});
                     });
                   }
                 }
@@ -172,22 +195,19 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                   userLocationMarker: UserLocationMaker(
                     personMarker: MarkerIcon(
                       icon: Icon(
-                        Icons.location_history_rounded,
-                        color: Colors.blueAccent,
-                        size: 62,
+                        Icons.location_on,
+                        color: Colors.red,
+                        size: 96,
                       ),
                     ),
                     directionArrowMarker: MarkerIcon(
                       iconWidget: Container(
-                        width: 40,
-                        height: 40,
+                        width: 96,
+                        height: 96,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.blueAccent,
-                            width: 3,
-                          ),
+                          border: Border.all(color: Colors.red, width: 5),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black26,
@@ -199,8 +219,8 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                         child: Center(
                           child: Icon(
                             Icons.navigation, // ícono de flecha estilo brújula
-                            color: Colors.blueAccent,
-                            size: 24,
+                            color: Colors.red,
+                            size: 96,
                           ),
                         ),
                       ),
@@ -238,15 +258,14 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                           Navigator.pop(context);
                           try {
                             final location = await mapController.myLocation();
-                            print(location);
                             final locationMap = {
-                              'lat': location.latitude,
-                              'lon': location.longitude,
+                              'latitude': location.latitude,
+                              'longitude': location.longitude,
                             };
                             setState(() {
                               cardsdView.add({
                                 'tipo': 'location',
-                                'location': jsonEncode(locationMap),
+                                'data': jsonEncode(locationMap),
                               });
                             });
                           } catch (e) {
@@ -256,35 +275,6 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                               ),
                             );
                             print(e);
-                          }
-                        },
-                      ),
-                      ListTile(
-                        leading: Icon(
-                          Icons.wifi_tethering,
-                          color: Colors.green,
-                        ),
-                        title: Text('Ubicación en tiempo real'),
-                        onTap: () async {
-                          Navigator.pop(context);
-                          try {
-                            final location = await mapController.myLocation();
-                            final locationMap = {
-                              'lat': location.latitude,
-                              'lon': location.longitude,
-                            };
-                            setState(() {
-                              cardsdView.add({
-                                'tipo': 'location',
-                                'location': jsonEncode(locationMap),
-                              });
-                            });
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error al obtener la ubicación'),
-                              ),
-                            );
                           }
                         },
                       ),
@@ -299,184 +289,467 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     );
   }
 
+  void _sendComplaints() async {
+    if (_formKey.currentState!.validate()) {
+      print(selectedComplaint);
+      if (selectedComplaint == null && complaintsController.text.isEmpty) {
+        setState(() {
+          _foreceText =
+              'Debe seleccionar un tipo de denuncia u otro tipo de denuncia';
+        });
+        return;
+      }
+      final String? storedUser = await UserStorage.getUser();
+      if (storedUser != null) {
+        final Map<String, dynamic> decoded = jsonDecode(storedUser);
+        final String userId = decoded['userId'] ?? '';
+        final List<File> images =
+            cardsdView
+                .where((item) => item['tipo'] == 'image')
+                .map<File>((item) => File((item['data'] as XFile).path))
+                .toList();
+        final File? video =
+            cardsdView.firstWhere(
+                      (item) => item['tipo'] == 'video',
+                      orElse: () => {},
+                    )['data'] !=
+                    null
+                ? File(
+                  (cardsdView.firstWhere(
+                            (item) => item['tipo'] == 'video',
+                            orElse: () => {'data': XFile('')},
+                          )['data']
+                          as XFile)
+                      .path,
+                )
+                : null;
+        final String? locationJson =
+            cardsdView.firstWhere(
+              (item) => item['tipo'] == 'location',
+              orElse: () => {},
+            )['data'];
+
+        final LocationUser? location =
+            locationJson != null
+                ? LocationUser.fromJson(jsonDecode(locationJson))
+                : null;
+
+        ComplaintsClientModel complaints = ComplaintsClientModel(
+          userId: userId,
+          aggressor: selectedAggressor?.id,
+          complaints: selectedComplaint?.id,
+          description: descriptionController.text,
+          images: images,
+          video: video,
+          location: location,
+          otherAggressor: aggressorController.text,
+          otherComaplints: complaintsController.text,
+          otherVictim: victimContoller.text,
+          place: placeController.text,
+          victim: selectedVictim?.id,
+        );
+
+        Navigator.pushReplacementNamed(
+          context,
+          '/loadingcomplaints',
+          arguments: complaints,
+        );
+      } else {
+        Navigator.pushReplacementNamed(context, '/splash');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    print('Argumento recibido: ${widget.complaint?.name}');
     return Scaffold(
-      appBar: CustomAppbar(
-        title: 'Realizar denuncias',
-        path: '/',
-        loading: false,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              widget.complaint == null
-                  ? Autocomplete<ComplaintsModel>(
-                    displayStringForOption:
-                        (ComplaintsModel option) => option.name,
-                    optionsBuilder: (TextEditingValue textEditingValue) {
-                      return typeComplaints.where(
-                        (ComplaintsModel option) => option.name
-                            .toLowerCase()
-                            .contains(textEditingValue.text.toLowerCase()),
-                      );
-                    },
-                    fieldViewBuilder: (
-                      context,
-                      controller,
-                      focusNode,
-                      onFieldSubmitted,
-                    ) {
-                      return TextFormField(
-                        controller: controller,
-                        focusNode: focusNode,
-                        decoration: InputDecoration(
-                          labelText: 'Tipo de denuncia',
-                          border: OutlineInputBorder(),
-                        ),
-                      );
-                    },
-                    optionsViewBuilder: (context, onSelected, options) {
-                      return Align(
-                        alignment: Alignment.topLeft,
-                        child: Material(
-                          elevation: 4,
-                          child: ListView.builder(
-                            padding: EdgeInsets.zero,
-                            shrinkWrap: true,
-                            itemCount: options.length,
-                            itemBuilder: (context, index) {
-                              final ComplaintsModel option = options.elementAt(
-                                index,
-                              );
-                              return ListTile(
-                                leading: Image.network(
-                                  option.image,
-                                  width: 40,
-                                  height: 40,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(Icons.image_not_supported);
+      appBar: CustomAppbar(title: 'Realizar denuncias', loading: false),
+      body:
+          _loading
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [CircularProgressIndicator()],
+                ),
+              )
+              : Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        widget.complaint == null
+                            ? Autocomplete<ComplaintsModel>(
+                              displayStringForOption:
+                                  (ComplaintsModel option) => option.name,
+                              optionsBuilder: (
+                                TextEditingValue textEditingValue,
+                              ) {
+                                return typeComplaints.where(
+                                  (ComplaintsModel option) =>
+                                      option.name.toLowerCase().contains(
+                                        textEditingValue.text.toLowerCase(),
+                                      ),
+                                );
+                              },
+                              fieldViewBuilder: (
+                                context,
+                                controller,
+                                focusNode,
+                                onFieldSubmitted,
+                              ) {
+                                return TextFormField(
+                                  controller: controller,
+                                  focusNode: focusNode,
+                                  forceErrorText: _foreceText,
+                                  decoration: InputDecoration(
+                                    labelText: 'Tipo de denuncia',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  validator: (value) {
+                                    String? error = Validator.validate(value, [
+                                      Validator.isRequired(
+                                        message: 'Este campo es requerido',
+                                      ),
+                                    ]);
+                                    return error;
                                   },
-                                ),
-                                title: Text(
-                                  option.name,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: FontStyle.italic,
+                                );
+                              },
+                              optionsViewBuilder: (
+                                context,
+                                onSelected,
+                                options,
+                              ) {
+                                return Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Material(
+                                    elevation: 4,
+                                    child: ListView.builder(
+                                      padding: EdgeInsets.zero,
+                                      shrinkWrap: true,
+                                      itemCount: options.length,
+                                      itemBuilder: (context, index) {
+                                        final ComplaintsModel option = options
+                                            .elementAt(index);
+                                        return ListTile(
+                                          leading: Image.network(
+                                            option.image,
+                                            width: 40,
+                                            height: 40,
+                                            errorBuilder: (
+                                              context,
+                                              error,
+                                              stackTrace,
+                                            ) {
+                                              return Icon(
+                                                Icons.image_not_supported,
+                                              );
+                                            },
+                                          ),
+                                          title: Text(
+                                            option.name,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                          subtitle: Text(
+                                            '${option.description.substring(0, option.description.length >= 90 ? 90 : option.description.length)}...',
+                                          ),
+                                          onTap: () => onSelected(option),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                              onSelected: (ComplaintsModel selection) {
+                                setState(() {
+                                  _foreceText = null;
+                                  selectedComplaint = selection;
+                                });
+                              },
+                            )
+                            : TextField(
+                              controller: defaultcomplaintsController,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                label: Text('Tipo de denuncia'),
+                              ),
+                            ),
+                        const SizedBox(height: 18),
+                        if (selectedComplaint?.name == 'Otro')
+                          Column(
+                            children: [
+                              TextFormField(
+                                controller: complaintsController,
+                                decoration: InputDecoration(
+                                  label: Text(
+                                    'Especifica otro tipo de denuncia ',
                                   ),
                                 ),
-                                subtitle: Text(
-                                  '${option.description.substring(0, option.description.length >= 90 ? 90 : option.description.length)}...',
+                                validator: (value) {
+                                  String? error = Validator.validate(value, [
+                                    Validator.isRequired(
+                                      message: 'Este campo es requerido.',
+                                    ),
+                                    Validator.matches(
+                                      RegExp(r'^[A-Za-z\s]+$'),
+                                      message:
+                                          'Este campo solo debe contener caracteres alfabéticas.',
+                                    ),
+                                    Validator.length(
+                                      4,
+                                      20,
+                                      message:
+                                          'Este campo debe contener mínimo 4 y como máximo 20 caracteres.',
+                                    ),
+                                  ]);
+                                  return error;
+                                },
+                              ),
+                              const SizedBox(height: 18),
+                            ],
+                          ),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<KinModel>(
+                                decoration: const InputDecoration(
+                                  labelText: 'Agresor (opcional)',
                                 ),
-                                onTap: () => onSelected(option),
-                              );
-                            },
+                                value: selectedAggressor,
+                                items:
+                                    kins.map((KinModel option) {
+                                      return DropdownMenuItem<KinModel>(
+                                        value: option,
+                                        child: Text(option.name),
+                                      );
+                                    }).toList(),
+                                onChanged: (KinModel? newValue) {
+                                  setState(() {
+                                    selectedAggressor = newValue;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 18),
+                            Expanded(
+                              child: DropdownButtonFormField<KinModel>(
+                                decoration: const InputDecoration(
+                                  labelText: 'Víctima (opcional)',
+                                ),
+                                value: selectedVictim,
+                                items:
+                                    kins.map((KinModel option) {
+                                      return DropdownMenuItem<KinModel>(
+                                        value: option,
+                                        child: Text(option.name),
+                                      );
+                                    }).toList(),
+                                onChanged: (KinModel? newValue) {
+                                  setState(() {
+                                    selectedVictim = newValue;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        if (selectedAggressor?.name == 'Otro' &&
+                            selectedVictim?.name == 'Otro')
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: aggressorController,
+                                      decoration: InputDecoration(
+                                        label: Text('Especifica otro agresor'),
+                                      ),
+                                      validator: (value) {
+                                        String?
+                                        error = Validator.validate(value, [
+                                          Validator.isRequired(
+                                            message: 'Este campo es requerido.',
+                                          ),
+                                          Validator.matches(
+                                            RegExp(r'^[A-Za-z\s]+$'),
+                                            message:
+                                                'Este campo solo debe contener caracteres alfabéticas.',
+                                          ),
+                                          Validator.length(
+                                            3,
+                                            20,
+                                            message:
+                                                'Este campo debe contener mínimo 3 y como máximo 20 caracteres.',
+                                          ),
+                                        ]);
+                                        return error;
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 18),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: victimContoller,
+                                      decoration: InputDecoration(
+                                        label: Text('Especifica otro víctima'),
+                                      ),
+                                      validator: (value) {
+                                        String?
+                                        error = Validator.validate(value, [
+                                          Validator.isRequired(
+                                            message: 'Este campo es requerido.',
+                                          ),
+                                          Validator.matches(
+                                            RegExp(r'^[A-Za-z\s]+$'),
+                                            message:
+                                                'Este campo solo debe contener caracteres alfabéticas.',
+                                          ),
+                                          Validator.length(
+                                            4,
+                                            20,
+                                            message:
+                                                'Este campo debe contener mínimo 4 y como máximo 20 caracteres.',
+                                          ),
+                                        ]);
+                                        return error;
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                            ],
+                          ),
+                        if (selectedAggressor?.name == 'Otro' &&
+                            selectedVictim?.name != 'Otro')
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: aggressorController,
+                                      decoration: InputDecoration(
+                                        label: Text('Especifica otro agresor'),
+                                      ),
+                                      validator: (value) {
+                                        String?
+                                        error = Validator.validate(value, [
+                                          Validator.isRequired(
+                                            message: 'Este campo es requerido.',
+                                          ),
+                                          Validator.matches(
+                                            RegExp(r'^[A-Za-z\s]+$'),
+                                            message:
+                                                'Este campo solo debe contener caracteres alfabéticas.',
+                                          ),
+                                          Validator.length(
+                                            3,
+                                            20,
+                                            message:
+                                                'Este campo debe contener mínimo 3 y como máximo 20 caracteres.',
+                                          ),
+                                        ]);
+                                        return error;
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 18),
+                                  Expanded(child: SizedBox()),
+                                ],
+                              ),
+
+                              const SizedBox(height: 18),
+                            ],
+                          ),
+                        if (selectedAggressor?.name != 'Otro' &&
+                            selectedVictim?.name == 'Otro')
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(child: SizedBox()),
+                                  SizedBox(width: 18),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: victimContoller,
+                                      decoration: InputDecoration(
+                                        label: Text('Especifica otro víctima'),
+                                      ),
+                                      validator: (value) {
+                                        String?
+                                        error = Validator.validate(value, [
+                                          Validator.isRequired(
+                                            message: 'Este campo es requerido.',
+                                          ),
+                                          Validator.matches(
+                                            RegExp(r'^[A-Za-z\s]+$'),
+                                            message:
+                                                'Este campo solo debe contener caracteres alfabéticas.',
+                                          ),
+                                          Validator.length(
+                                            3,
+                                            20,
+                                            message:
+                                                'Este campo debe contener mínimo 3 y como máximo 20 caracteres.',
+                                          ),
+                                        ]);
+                                        return error;
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 18),
+                            ],
+                          ),
+                        TextFormField(
+                          controller: descriptionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Descripción (opcional)',
+                          ),
+                          maxLines: 4,
+                        ),
+                        const SizedBox(height: 18),
+                        TextField(
+                          controller: placeController,
+                          decoration: InputDecoration(
+                            labelText: 'Lugar del hecho (opcional)',
+                            prefixIcon: GestureDetector(
+                              onTap: () {
+                                _osmMap(context);
+                              },
+                              child: Icon(Icons.place_outlined),
+                            ),
                           ),
                         ),
-                      );
-                    },
-                    onSelected: (ComplaintsModel selection) {
-                      setState(() {
-                        selectedComplaint = selection;
-                      });
-                    },
-                  )
-                  : TextField(
-                    controller: complaintsController,
-                    enabled: false,
-                    decoration: InputDecoration(
-                      label: Text('Tipo de denuncia'),
+                        const SizedBox(height: 18),
+                        RenderPlayers(
+                          cardsdView: cardsdView,
+                          removeItem:
+                              (index) => setState(() {
+                                cardsdView.removeAt(index);
+                              }),
+                        ),
+                      ],
                     ),
                   ),
-              const SizedBox(height: 18),
-              if (selectedComplaint?.name == 'Otro')
-                Column(
-                  children: [
-                    TextField(
-                      controller: complaintsController,
-                      decoration: InputDecoration(
-                        label: Text('Especifica otro tipo de denuncia '),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                  ],
-                ),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Agresor'),
-                      value: selectedAggressor,
-                      items:
-                          Kins.map((KinModel option) {
-                            return DropdownMenuItem<String>(
-                              value: option.name,
-                              child: Text(option.name),
-                            );
-                          }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedAggressor = newValue;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Víctima'),
-                      value: selectedVictim,
-                      items:
-                          Kins.map((KinModel option) {
-                            return DropdownMenuItem<String>(
-                              value: option.name,
-                              child: Text(option.name),
-                            );
-                          }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedVictim = newValue;
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Descripción(opcional)',
-                ),
-                maxLines: 4,
-              ),
-              const SizedBox(height: 18),
-              TextField(
-                controller: placeController,
-                decoration: const InputDecoration(
-                  labelText: 'Lugar del hecho(opcional)',
-                  prefixIcon: Icon(Icons.place_outlined),
                 ),
               ),
-              const SizedBox(height: 18),
-              cardsdView.isEmpty
-                  ? Divider()
-                  : RenderPlayers(cardsdView: cardsdView),
-            ],
-          ),
-        ),
-      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              // ignore: deprecated_member_use
               color: Colors.black.withOpacity(0.1),
               blurRadius: 8,
               spreadRadius: 2,
@@ -491,53 +764,55 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 'Adjuntar',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ),
             BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
-              selectedItemColor: Colors.blue,
-              currentIndex: 3,
-              unselectedItemColor: Colors.grey,
+              backgroundColor: Colors.white,
               showSelectedLabels: true,
               showUnselectedLabels: true,
-              onTap: (index) {
-                if (index == 0) {
-                  _showMediaOptions(context, 'Galería');
-                } else if (index == 1) {
-                  _showMediaOptions(context, 'Cámara');
-                } else if (index == 2) {
-                  if (cardsdView
-                      .where((item) => item['tipo'] == 'location')
-                      .isNotEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Solo se puede enviar una ubicacion'),
-                      ),
-                    );
-                  } else {
-                    _osmMap(context);
-                  }
-                } else if (index == 3) {
-                  // ignore: avoid_print
-                  print("Enviar formulario"); // Implementar lógica de envío
-                }
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.image),
+              onTap:
+                  _loading
+                      ? null
+                      : (index) {
+                        if (index == 0) {
+                          _showMediaOptions(context, 'Galería');
+                        } else if (index == 1) {
+                          _showMediaOptions(context, 'Cámara');
+                        } else if (index == 2) {
+                          if (cardsdView
+                              .where((item) => item['tipo'] == 'location')
+                              .isNotEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Solo se puede enviar una ubicacion',
+                                ),
+                              ),
+                            );
+                          } else {
+                            _osmMap(context);
+                          }
+                        } else if (index == 3) {
+                          _sendComplaints();
+                        }
+                      },
+              items: [
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.image, color: Colors.blueAccent),
                   label: 'Galería',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.camera_alt),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.camera_alt, color: Colors.pinkAccent),
                   label: 'Cámara',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.place),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.place, color: Colors.greenAccent),
                   label: 'Ubicación',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.send),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.send, color: Colors.lightGreen),
                   label: 'Enviar',
                 ),
               ],

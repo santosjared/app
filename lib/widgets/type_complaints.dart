@@ -14,6 +14,7 @@ class _TypeComplaints extends State<TypeComplaints> {
   final ComplaintsService complaintsService = ComplaintsService();
   List<ComplaintsModel> typeComplaints = [];
 
+  bool _loading = true;
   @override
   void initState() {
     super.initState();
@@ -23,9 +24,12 @@ class _TypeComplaints extends State<TypeComplaints> {
   _loadComplaints() async {
     final List<ComplaintsModel> fetchComplaints =
         await complaintsService.getComplaints();
-    setState(() {
-      typeComplaints = fetchComplaints;
-    });
+    if (mounted) {
+      setState(() {
+        typeComplaints = fetchComplaints;
+        _loading = false;
+      });
+    }
   }
 
   String truncateText(String text, String title, int maxLength) {
@@ -48,87 +52,97 @@ class _TypeComplaints extends State<TypeComplaints> {
       crossAxisCount = 4;
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: childAspectRatio / crossAxisCount,
-        ),
-        itemCount: typeComplaints.length,
-        itemBuilder: (context, index) {
-          var card = typeComplaints[index];
-          String truncatedDescription = truncateText(
-            card.description,
-            card.name,
-            180,
-          );
-          return Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+    return _loading
+        ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [CircularProgressIndicator()],
+          ),
+        )
+        : Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: childAspectRatio / crossAxisCount,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(10),
-                    topRight: Radius.circular(10),
-                  ),
-                  child: Image.network(
-                    card.image,
-                    width: double.infinity,
-                    height: 210,
-                    fit: BoxFit.fill,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
+            itemCount: typeComplaints.length,
+            itemBuilder: (context, index) {
+              var card = typeComplaints[index];
+              String truncatedDescription = truncateText(
+                card.description,
+                card.name,
+                180,
+              );
+              return Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        topRight: Radius.circular(10),
+                      ),
+                      child: Image.network(
+                        card.image,
+                        width: double.infinity,
                         height: 210,
-                        color: Colors.grey[300],
-                        child: const Center(
-                          child: Icon(Icons.broken_image, size: 50),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    card.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                        fit: BoxFit.fill,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 210,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(Icons.broken_image, size: 50),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        card.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        truncatedDescription,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Center(
+                      child: CustomButton(
+                        text: 'Realizar esta denuncia',
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/complaints',
+                            arguments: card,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    truncatedDescription,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Center(
-                  child: CustomButton(
-                    text: 'Realizar esta denuncia',
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(
-                        context,
-                        '/complaints',
-                        arguments: card,
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+              );
+            },
+          ),
+        );
   }
 }

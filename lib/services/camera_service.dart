@@ -11,6 +11,7 @@ class CameraService {
   Future<XFile?> videoFromCamera() async {
     final XFile? cameraVideo = await picker.pickVideo(
       source: ImageSource.camera,
+      maxDuration: const Duration(minutes: 2),
     );
     return cameraVideo;
   }
