@@ -3,18 +3,19 @@ import 'dart:io';
 import 'package:app/models/complaints_client_model.dart';
 import 'package:app/models/complaints_model.dart';
 import 'package:app/models/kin_model.dart';
+import 'package:app/providers/auth_provider.dart';
 import 'package:app/services/camera_service.dart';
 import 'package:app/services/complaints_service.dart';
 import 'package:app/services/gallery_service.dart';
 import 'package:app/services/kin_service.dart';
 import 'package:app/services/location_service.dart';
-import 'package:app/storage/user_storage.dart';
 import 'package:app/utils/validator.dart';
 import 'package:app/widgets/custom_appbar.dart';
 import 'package:app/widgets/render_players.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 class ComplaintsScreen extends StatefulWidget {
   final ComplaintsModel? complaint;
@@ -25,8 +26,6 @@ class ComplaintsScreen extends StatefulWidget {
 }
 
 class _ComplaintsScreenState extends State<ComplaintsScreen> {
-  final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController placeController = TextEditingController();
   final GalleryService galleryService = GalleryService();
   final CameraService camareService = CameraService();
   final LocationService locationService = LocationService();
@@ -37,6 +36,8 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   TextEditingController aggressorController = TextEditingController();
   TextEditingController victimContoller = TextEditingController();
   TextEditingController defaultcomplaintsController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController placeController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
   bool _loading = true;
@@ -77,6 +78,14 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     }
   }
 
+  void _showMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), duration: Duration(seconds: 3)),
+      );
+    }
+  }
+
   final List<Map<String, dynamic>> cardsdView = [];
 
   void _showMediaOptions(BuildContext context, String tipo) {
@@ -105,12 +114,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                                     .where((item) => item['tipo'] == 'image')
                                     .length >
                             3) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Solo se permite como maximo 3 fotos'),
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
+                      _showMessage('Solo se permite como maximo 3 fotos');
                     } else {
                       setState(() {
                         for (var imag in image) {
@@ -269,12 +273,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                               });
                             });
                           } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error al obtener la ubicación '),
-                              ),
-                            );
-                            print(e);
+                            _showMessage('Error al obtener la ubicación ');
                           }
                         },
                       ),
@@ -291,7 +290,6 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
 
   void _sendComplaints() async {
     if (_formKey.currentState!.validate()) {
-      print(selectedComplaint);
       if (selectedComplaint == null && complaintsController.text.isEmpty) {
         setState(() {
           _foreceText =
@@ -299,10 +297,8 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
         });
         return;
       }
-      final String? storedUser = await UserStorage.getUser();
-      if (storedUser != null) {
-        final Map<String, dynamic> decoded = jsonDecode(storedUser);
-        final String userId = decoded['userId'] ?? '';
+      final user = Provider.of<AuthProvider>(context, listen: false).user;
+      if (user != null) {
         final List<File> images =
             cardsdView
                 .where((item) => item['tipo'] == 'image')
@@ -335,7 +331,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                 : null;
 
         ComplaintsClientModel complaints = ComplaintsClientModel(
-          userId: userId,
+          userId: user.id ?? '',
           aggressor: selectedAggressor?.id,
           complaints: selectedComplaint?.id,
           description: descriptionController.text,

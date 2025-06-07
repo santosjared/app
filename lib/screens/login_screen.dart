@@ -1,14 +1,11 @@
-import 'package:app/screens/dashboard_screen.dart';
-import 'package:app/screens/send_to_email_screen.dart';
-import 'package:app/services/facebook_auth_service.dart';
-import 'package:app/services/google_auth_service.dart';
+import 'package:app/providers/auth_provider.dart';
 import 'package:app/theme/color_scheme.dart';
-// import 'package:app/services/twitter_auth_service.dart';
 import 'package:app/widgets/custom_divider.dart';
 import 'package:app/widgets/sample_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import '../models/login.dart';
 import '../services/auth_service.dart';
 
@@ -30,8 +27,9 @@ class _LoginScreenState extends State<LoginScreen> {
   bool rememberMe = true;
 
   void _login() async {
-    isError = false;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     setState(() {
+      isError = false;
       isLoading = true;
     });
 
@@ -40,13 +38,14 @@ class _LoginScreenState extends State<LoginScreen> {
       password: passwordController.text,
     );
 
-    bool success = await authService.login(user, rememberMe);
+    bool success = await authProvider.login(user, rememberMe);
 
     setState(() {
       isLoading = false;
     });
 
     if (success) {
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/');
     } else {
       isError = true;
@@ -54,25 +53,27 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> loginWithGoogle() async {
-    final token = await GoogleAuthService().signInWithGoogle();
-    print(token);
-    if (token != null) {
-      // await sendTokenToBackend(token);
-    }
-  }
+    if (!mounted) return;
 
-  Future<void> loginWithFacebook() async {
-    final token = await FacebookAuthService().signInWithFacebook();
-    if (token != null) {
-      await sendTokenToBackend(token);
-    }
-  }
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.authGoogle(rememberMe);
 
-  Future<void> loginWithTwitter() async {
-    // final token = await TwitterAuthService().signInWithTwitter();
-    // if (token != null) {
-    //   await sendTokenToBackend(token);
-    // }
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.pushReplacementNamed(context, '/');
+    } else {
+      final errorMessage =
+          authProvider.error ??
+          'Tenemos algunos problrmas al iniciar sesión con Google. Por favor, inténtelo más tarde.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   @override
@@ -100,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
+                        color: ColorsScheme.primary,
                       ),
                     ),
                   ),
@@ -197,12 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SendToEmailScreen(),
-                            ),
-                          );
+                          Navigator.pushNamed(context, '/send-email');
                         },
                         child: const Text('¿Olvidó su contraseña?'),
                       ),
@@ -213,38 +209,27 @@ class _LoginScreenState extends State<LoginScreen> {
                     child:
                         isLoading
                             ? const CircularProgressIndicator()
-                            : ElevatedButton(
-                              onPressed: _login,
-                              child: Text('Iniciar sesión'),
+                            : SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _login,
+                                child: Text('Iniciar sesión'),
+                              ),
                             ),
                   ),
                   const SizedBox(height: 10),
                   CustomDivider(text: 'o iniciar sesión con'),
                   const SizedBox(height: 10),
-
-                  // Botones de redes sociales
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: loginWithGoogle,
-                        icon: const FaIcon(
-                          FontAwesomeIcons.google,
-                          color: Colors.red,
-                        ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: loginWithGoogle,
+                      icon: const FaIcon(
+                        FontAwesomeIcons.google,
+                        color: Colors.red,
                       ),
-                      IconButton(
-                        onPressed: loginWithFacebook,
-                        icon: const FaIcon(
-                          FontAwesomeIcons.facebook,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: loginWithTwitter,
-                        icon: const FaIcon(FontAwesomeIcons.xTwitter),
-                      ),
-                    ],
+                      label: const Text("Google"),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Row(

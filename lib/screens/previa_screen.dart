@@ -52,11 +52,9 @@ class _PreviaScreen extends State<PreviaScreen> {
             flickManager = FlickManager(videoPlayerController: controller);
           });
         } else {
-          // El video no existe
           setState(() => videoError = true);
         }
       } catch (e) {
-        // Manejo de error si el servidor no responde o devuelve 404
         setState(() => videoError = true);
       }
     }

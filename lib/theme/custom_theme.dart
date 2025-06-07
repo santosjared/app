@@ -7,43 +7,43 @@ class CustomTheme {
     return (ThemeData(
       brightness:
           themeMode == Mode.lightMode ? Brightness.light : Brightness.dark,
-      primaryColor: colorScheme.primary,
+      primaryColor: ColorsScheme.primary,
       scaffoldBackgroundColor:
           themeMode == Mode.lightMode
-              ? colorScheme.lightBackground
-              : colorScheme.darkBackground,
+              ? ColorsScheme.lightBackground
+              : ColorsScheme.darkBackground,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: colorScheme.primary,
+          backgroundColor: ColorsScheme.primary,
           foregroundColor: Colors.white,
           iconColor: Colors.white,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: colorScheme.primary,
-          iconColor: colorScheme.primary,
-          side: BorderSide(color: colorScheme.primary),
+          foregroundColor: ColorsScheme.primary,
+          iconColor: ColorsScheme.primary,
+          side: BorderSide(color: ColorsScheme.primary),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         fillColor:
             themeMode == Mode.lightMode
-                ? colorScheme.lightBackground
-                : colorScheme.darkBackground,
-        prefixIconColor: colorScheme.primary,
-        suffixIconColor: colorScheme.primary,
-        labelStyle: TextStyle(color: colorScheme.primary),
+                ? ColorsScheme.lightBackground
+                : ColorsScheme.darkBackground,
+        prefixIconColor: ColorsScheme.primary,
+        suffixIconColor: ColorsScheme.primary,
+        labelStyle: TextStyle(color: ColorsScheme.primary),
         border: OutlineInputBorder(
-          borderSide: BorderSide(color: colorScheme.primary),
+          borderSide: BorderSide(color: ColorsScheme.primary),
           borderRadius: BorderRadius.circular(8),
         ),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: colorScheme.primary),
+          borderSide: BorderSide(color: ColorsScheme.primary),
           borderRadius: BorderRadius.circular(8),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+          borderSide: BorderSide(color: ColorsScheme.primary, width: 2),
           borderRadius: BorderRadius.circular(8),
         ),
         errorBorder: OutlineInputBorder(
@@ -59,39 +59,39 @@ class CustomTheme {
       textSelectionTheme: TextSelectionThemeData(
         cursorColor:
             themeMode == Mode.lightMode
-                ? colorScheme.textLight
-                : colorScheme.textDark,
+                ? ColorsScheme.textLight
+                : ColorsScheme.textDark,
         selectionColor:
             themeMode == Mode.lightMode
-                ? colorScheme.textLight.withOpacity(0.5)
-                : colorScheme.textDark.withOpacity(0.5),
+                ? ColorsScheme.textLight.withOpacity(0.5)
+                : ColorsScheme.textDark.withOpacity(0.5),
         selectionHandleColor:
             themeMode == Mode.lightMode
-                ? colorScheme.textLight
-                : colorScheme.textDark,
+                ? ColorsScheme.textLight
+                : ColorsScheme.textDark,
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: colorScheme.primary,
+        color: ColorsScheme.primary,
       ),
       textTheme: TextTheme(
         bodyLarge: TextStyle(
           color:
               themeMode == Mode.lightMode
-                  ? colorScheme.textLight
-                  : colorScheme.textDark,
+                  ? ColorsScheme.textLight
+                  : ColorsScheme.textDark,
         ),
         bodyMedium: TextStyle(
           color:
               themeMode == Mode.lightMode
-                  ? colorScheme.textLight
-                  : colorScheme.textDark,
+                  ? ColorsScheme.textLight
+                  : ColorsScheme.textDark,
           fontWeight: FontWeight.bold,
         ),
         titleMedium: TextStyle(
           color:
               themeMode == Mode.lightMode
-                  ? colorScheme.textLight
-                  : colorScheme.textDark,
+                  ? ColorsScheme.textLight
+                  : ColorsScheme.textDark,
           fontStyle: FontStyle.italic,
         ),
       ),

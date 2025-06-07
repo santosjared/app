@@ -1,15 +1,15 @@
-import 'dart:convert';
+import 'package:app/providers/auth_provider.dart';
 import 'package:app/services/auth_service.dart';
 import 'package:app/utils/getinials.dart';
 import 'package:app/utils/validator.dart';
 import 'package:flutter/material.dart';
 import 'package:app/models/user_data.dart';
 import 'package:app/services/user_service.dart';
-import 'package:app/storage/user_storage.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
-
+  final String email;
+  const ProfileScreen({super.key, required this.email});
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -24,7 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   TextEditingController? _phoneController;
 
   final _formKey = GlobalKey<FormState>();
-  UserData? user;
+  UserData? _user;
   bool _isEditable = false;
   bool _isLoading = true;
 
@@ -35,29 +35,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUser() async {
-    final String? storedUser = await UserStorage.getUser();
-    if (storedUser != null) {
-      final Map<String, dynamic> decoded = jsonDecode(storedUser);
-      final String email = decoded['email'] ?? '';
-
-      final UserData? fetchedUser = await userService.getUserData(email);
-      if (fetchedUser != null) {
-        setState(() {
-          user = fetchedUser;
-          _nameController = TextEditingController(text: fetchedUser.name);
-          _lastNameController = TextEditingController(
-            text: fetchedUser.lastName,
-          );
-          _emailController = TextEditingController(text: fetchedUser.email);
-          _phoneController = TextEditingController(text: fetchedUser.phone);
-        });
-      }
-    } else {
-      Navigator.pushReplacementNamed(context, '/splash');
+    final UserData? fetchedUser = await userService.getUserData(widget.email);
+    if (fetchedUser != null) {
+      setState(() {
+        _user = fetchedUser;
+        _nameController = TextEditingController(text: fetchedUser.name);
+        _lastNameController = TextEditingController(text: fetchedUser.lastName);
+        _emailController = TextEditingController(text: fetchedUser.email);
+        _phoneController = TextEditingController(text: fetchedUser.phone);
+      });
     }
     setState(() {
       _isLoading = false;
     });
+  }
+
+  void _logout() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.logout();
+    if (!mounted) return;
+    Navigator.pop(context);
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -70,21 +68,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveChanges() async {
-    if (user == null) return;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (_user == null) return;
 
     if (_formKey.currentState!.validate()) {
       final updatedUser = UserData(
         name: _nameController!.text,
         lastName: _lastNameController!.text,
         email: _emailController!.text,
-        phone: '+591${_phoneController!.text}',
-        id: user!.id,
+        phone: _phoneController!.text,
+        id: _user!.id,
       );
 
       final success = await userService.updateUserData(updatedUser);
       if (success) {
+        authProvider.setUser(updatedUser);
         setState(() {
-          user = updatedUser;
+          _user = updatedUser;
           _isEditable = false;
         });
       }
@@ -93,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (user == null && !_isLoading) {
+    if (_user == null && !_isLoading) {
       return Scaffold(
         body: Center(
           child: Column(
@@ -163,15 +163,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     CircleAvatar(
                       radius: 35,
-                      child: Text(Inials.getInials(user!.name, user!.lastName)),
+                      child: Text(
+                        Inials.getInials(_user!.name, _user!.lastName),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      '${user!.name} ${user!.lastName}',
+                      '${_user!.name} ${_user!.lastName}',
                       style: const TextStyle(color: Colors.white, fontSize: 22),
                     ),
                     Text(
-                      user!.email,
+                      _user!.email,
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 16,
@@ -316,10 +318,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: Card(
                   child: InkWell(
-                    onTap: () async {
-                      await auth.logout();
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
+                    onTap: _logout,
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Row(

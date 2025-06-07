@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-// ignore: camel_case_types
-class colorScheme {
+class ColorsScheme {
   static const lightBackground = Color(0xFFfdfffc);
   static const primary = Color.fromARGB(255, 0, 155, 80);
 

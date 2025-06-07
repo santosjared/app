@@ -1,81 +1,73 @@
-import 'dart:io';
 import 'package:app/config/env_config.dart';
 import 'package:app/config/http.dart';
-import 'package:app/constants/extencion_token.dart';
-import 'package:app/storage/token_storage.dart';
-import 'package:app/storage/user_storage.dart';
+import 'package:app/models/user_data.dart';
+import 'package:dio/dio.dart';
 import '../models/login.dart';
 
 class AuthService {
-  Future<bool> login(Login login, bool remeberme) async {
+  static Future<Map<dynamic, dynamic>?> login(Login login) async {
     try {
-      var response = await dio.post(
+      final response = await dio.post(
         '${EnvConfig.apiUrl}/auth',
         data: login.toJson(),
       );
-
-      if (remeberme) {
-        TokenStorage.saveToken(
-          response.data[Token.access.token],
-          response.data[Token.refresh.token],
-        );
-      }
-      final userData = response.data['userData'] ?? {};
-      UserStorage.saveUser(userData);
-      return true;
+      return response.data;
     } catch (e) {
-      TokenStorage.removeAccessToken();
-      TokenStorage.removeRefreshToken();
-      UserStorage.removeUser();
-      return false;
+      _handleErrors(e);
+      return null;
     }
   }
 
-  Future<bool> ValidateAccessToApp() async {
-    String? accessToken = await TokenStorage.getAccessToken();
-    if (accessToken != null) {
-      return await RefreshToken();
-    }
-    return false;
-  }
-
-  Future<bool> RefreshToken() async {
+  static Future<Map<dynamic, dynamic>?> refreshToken(String token) async {
     try {
-      String? refreshToken = await TokenStorage.getRefreshToken();
-      if (refreshToken == null) return false;
-
       final response = await dio.post(
         '${EnvConfig.apiUrl}/auth/refresh-token',
-        data: {'token': refreshToken},
+        data: {'token': token},
       );
-
-      print(response.statusCode);
-      print(response.data);
-      if (response.statusCode == HttpStatus.created) {
-        await TokenStorage.saveToken(
-          response.data[Token.access.token],
-          response.data[Token.access.token],
-        );
-        final userData = response.data['userData'] ?? {};
-        UserStorage.saveUser(userData);
-        return true;
-      }
-      return false;
+      return response.data;
     } catch (e) {
-      print('error en refreshToken: $e');
+      _handleErrors(e);
+      return null;
+    }
+  }
+
+  static Future<bool> logout(String id) async {
+    try {
+      print('user idddddddddddddddddddddddddd $id');
+      await dio.delete('${EnvConfig.apiUrl}auth/logout/$id');
+      return true;
+    } catch (e) {
+      _handleErrors(e);
       return false;
     }
   }
 
-  Future<bool> logout() async {
+  Future<UserData?> resetPassword(String token, String password) async {
     try {
-      TokenStorage.removeAccessToken();
-      TokenStorage.removeRefreshToken();
-      UserStorage.removeUser();
-    } catch (e) {
-      print(e);
-    }
+      final response = await dio.put(
+        '/auth/reset-password',
+        data: {'token': token, 'password': password},
+      );
 
-    return true;
+      await Future.delayed(Duration(seconds: 2));
+      return UserData.fromJson(response.data['data']);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static _handleErrors(e) {
+    if (e is DioException) {
+      print('⚠️ DioException:');
+      print('Status: ${e.response?.statusCode}');
+      print('Data: ${e.response?.data}');
+      print('Request: ${e.requestOptions}');
+    } else {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        print('Sin conexión a internet');
+      }
+      print('❌ Otro error: $e');
+    }
   }
 }

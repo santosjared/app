@@ -6,23 +6,35 @@ import 'package:app/screens/login_screen.dart';
 import 'package:app/screens/previa_screen.dart';
 import 'package:app/screens/profile_screen.dart';
 import 'package:app/screens/register_user_screen.dart';
-import 'package:app/screens/splash_screen.dart';
+import 'package:app/screens/reset_password_screen.dart';
+import 'package:app/screens/send_to_code_screen.dart';
+import 'package:app/screens/send_to_email_screen.dart';
+import 'package:app/screens/home_screen.dart';
 import 'package:app/widgets/loading_page.dart';
 import 'package:flutter/material.dart';
 import 'package:app/screens/dashboard_screen.dart';
 
 class AppRoutes {
-  static Route<dynamic> Routes(RouteSettings settings) {
-    print(settings.name);
+  static Route<dynamic> routes(RouteSettings settings) {
     switch (settings.name) {
-      case "/splash":
-        return MaterialPageRoute(builder: (_) => SplashScreen());
       case "/":
+        return MaterialPageRoute(builder: (_) => HomeScreen());
+      case "/Dashboard":
         return MaterialPageRoute(builder: (_) => DashboardScreen());
       case "/register":
         return MaterialPageRoute(builder: (_) => RegisterUserScreen());
       case "/login":
         return MaterialPageRoute(builder: (_) => LoginScreen());
+      case "/send-email":
+        return MaterialPageRoute(builder: (_) => SendToEmailScreen());
+      case "/send-code":
+        final args = settings.arguments as String;
+        return MaterialPageRoute(builder: (_) => SendToCodeScreen(email: args));
+      case "/reset-password":
+        final ars = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => ResetPasswordScreen(token: ars),
+        );
       case "/complaints":
         final args = settings.arguments as ComplaintsModel?;
         return MaterialPageRoute(
@@ -30,7 +42,8 @@ class AppRoutes {
         );
 
       case "/profile":
-        return MaterialPageRoute(builder: (_) => ProfileScreen());
+        final args = settings.arguments as String;
+        return MaterialPageRoute(builder: (_) => ProfileScreen(email: args));
       case "/previa":
         final args = settings.arguments as Map<String, dynamic>;
         final PreviaModel complaint = args['complaint'];

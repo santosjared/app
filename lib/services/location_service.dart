@@ -30,11 +30,11 @@ class LocationService {
   }
 
   Stream<Position> getLocationStream() async* {
-    await _checkPermissions(); // Verificar permisos antes de iniciar el Stream
+    await _checkPermissions();
     yield* Geolocator.getPositionStream(
       locationSettings: LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // Se activará cuando el usuario se mueva 10 metros
+        distanceFilter: 10,
       ),
     );
   }

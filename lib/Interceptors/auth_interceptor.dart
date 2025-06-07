@@ -1,21 +1,20 @@
 import 'dart:io';
-
-import 'package:app/services/auth_service.dart';
-import 'package:app/storage/token_storage.dart';
-import 'package:app/storage/user_storage.dart';
+import 'package:app/providers/auth_provider.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 
 class AuthInterceptor extends Interceptor {
   final Dio dio;
-  final AuthService authService = AuthService();
-  AuthInterceptor(this.dio);
+  final AuthProvider authProvider;
+  final GlobalKey<NavigatorState> navigatorKey;
+  AuthInterceptor(this.dio, this.authProvider, this.navigatorKey);
 
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final accessToken = await TokenStorage.getAccessToken();
+    final accessToken = authProvider.token;
     if (accessToken != null) {
       options.headers["Authorization"] = "Bearer $accessToken";
     }
@@ -25,13 +24,10 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == HttpStatus.unauthorized) {
-      print("Token expirado. Intentando refrescar...");
-      final refreshed = await authService.RefreshToken();
+      final refreshed = await authProvider.refresh();
       if (refreshed) {
-        print("Token refrescado. Reintentando solicitud...");
         final options = err.requestOptions;
-        options.headers["Authorization"] =
-            "Bearer ${await TokenStorage.getAccessToken()}";
+        options.headers["Authorization"] = "Bearer ${authProvider.token}";
 
         try {
           final response = await dio.fetch(options);
@@ -40,10 +36,13 @@ class AuthInterceptor extends Interceptor {
           return handler.reject(e as DioException);
         }
       } else {
-        print("No se pudo refrescar el token. Redirigiendo al login...");
-        await TokenStorage.removeAccessToken();
-        await TokenStorage.removeRefreshToken();
-        await UserStorage.removeUser();
+        if (authProvider.isAuthenticated) {
+          authProvider.logout();
+          navigatorKey.currentState?.pushNamedAndRemoveUntil(
+            "/login",
+            (route) => false,
+          );
+        }
       }
     }
     handler.next(err);

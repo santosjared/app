@@ -1,16 +1,18 @@
 import 'package:app/models/login.dart';
 import 'package:app/models/user_data.dart';
+import 'package:app/providers/auth_provider.dart';
 import 'package:app/services/auth_service.dart';
 import 'package:app/services/user_service.dart';
 import 'package:app/utils/validator.dart';
 import 'package:app/widgets/custom_appbar.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RegisterUserScreen extends StatefulWidget {
   const RegisterUserScreen({super.key});
 
   @override
-  _RegisterUserScreen createState() => _RegisterUserScreen();
+  State<RegisterUserScreen> createState() => _RegisterUserScreen();
 }
 
 class _RegisterUserScreen extends State<RegisterUserScreen> {
@@ -35,6 +37,7 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
     });
     forceErrorText = null;
     if (_formKey.currentState!.validate()) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       bool existsEmail = await registerService.checkEmail(emailController.text);
 
       if (existsEmail) {
@@ -47,7 +50,7 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
           name: nameController.text,
           lastName: lastnameController.text,
           email: emailController.text,
-          phone: '+591${phoneController.text}',
+          phone: phoneController.text,
           password: passwordController.text,
         );
 
@@ -58,15 +61,20 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
             email: emailController.text,
             password: passwordController.text,
           );
-          bool isAutenticate = await authService.login(user, true);
+          bool isAutenticate = await authProvider.login(user, true);
+          if (!mounted) return;
           Navigator.pushReplacementNamed(
             context,
             isAutenticate ? '/' : '/login',
           );
         } else {
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Ha ocurrido un error al registrarse'),
+              content: Text(
+                'En este momento no podemos registrar usuarios. Por favor, inténtelo más tarde.',
+              ),
+              backgroundColor: Colors.red,
               duration: Duration(seconds: 3),
             ),
           );
@@ -93,7 +101,6 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
           child: Column(
             children: <Widget>[
               Expanded(
-                // Expande los campos de entrada para que los botones queden abajo
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
@@ -231,7 +238,6 @@ class _RegisterUserScreen extends State<RegisterUserScreen> {
                               _obscureText
                                   ? Icons.visibility_off
                                   : Icons.visibility,
-                              // color: Palette.lightPrimary,
                             ),
                             onPressed: () {
                               setState(() {

@@ -27,6 +27,20 @@ class _LoadingPage extends State<LoadingPage> {
     }
   }
 
+  void _nextPage(PreviaModel previa) {
+    if (mounted) {
+      Navigator.pushReplacementNamed(
+        context,
+        '/previa',
+        arguments: {
+          'complaint': previa,
+          'title': 'Denuncias enviadas',
+          'path': '/',
+        },
+      );
+    }
+  }
+
   Future<void> sendComplaints() async {
     try {
       final formData = await widget.complaints.toFormData();
@@ -42,15 +56,7 @@ class _LoadingPage extends State<LoadingPage> {
       );
       if (response.statusCode == HttpStatus.created) {
         PreviaModel previa = PreviaModel.fromJson(response.data);
-        Navigator.pushReplacementNamed(
-          context,
-          '/previa',
-          arguments: {
-            'complaint': previa,
-            'title': 'Denuncias enviadas',
-            'path': '/',
-          },
-        );
+        _nextPage(previa);
       }
     } catch (e) {
       if (e is DioException) {
@@ -119,7 +125,7 @@ class _LoadingPage extends State<LoadingPage> {
                         minHeight: 15,
                       ),
                       SizedBox(height: 10),
-                      Text('Enviado la denuncia espere un momento'),
+                      Text('Enviando la denuncia espere un momento'),
                     ],
                   ),
                 ),

@@ -1,6 +1,6 @@
+import 'package:app/config/env_config.dart';
 import 'package:app/models/complaints_model.dart';
 import 'package:app/services/complaints_service.dart';
-import 'package:app/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 
 class TypeComplaints extends StatefulWidget {
@@ -90,7 +90,7 @@ class _TypeComplaints extends State<TypeComplaints> {
                         topRight: Radius.circular(10),
                       ),
                       child: Image.network(
-                        card.image,
+                        '${EnvConfig.apiUrl}/images/${card.image}',
                         width: double.infinity,
                         height: 210,
                         fit: BoxFit.fill,
@@ -127,10 +127,10 @@ class _TypeComplaints extends State<TypeComplaints> {
                     ),
                     const SizedBox(height: 10),
                     Center(
-                      child: CustomButton(
-                        text: 'Realizar esta denuncia',
+                      child: ElevatedButton(
+                        child: Text('Realizar esta denuncia'),
                         onPressed: () {
-                          Navigator.pushReplacementNamed(
+                          Navigator.pushNamed(
                             context,
                             '/complaints',
                             arguments: card,
