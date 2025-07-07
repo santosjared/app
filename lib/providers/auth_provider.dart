@@ -4,7 +4,7 @@ import 'package:app/models/user_data.dart';
 import 'package:app/services/auth_service.dart';
 import 'package:app/services/google_auth_service.dart';
 import 'package:app/storage/token_storage.dart';
-import 'package:app/storage/user_storage.dart';
+// import 'package:app/storage/user_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -15,9 +15,7 @@ class AuthProvider with ChangeNotifier {
   UserData? _user;
   bool _rememberMe = false;
   String? _error;
-  bool _isGoogleLogin = false;
 
-  bool get isGoogleLogin => _isGoogleLogin;
   bool get isAuthenticated => _isAuthenticated;
   String? get token => _token;
   String? get refreshToken => _refreshToken;
@@ -35,8 +33,8 @@ class AuthProvider with ChangeNotifier {
       _rememberMe = rememberMe;
 
       if (rememberMe) {
-        await TokenStorage.saveToken(_refreshToken!);
-        await UserStorage.saveUser(response['userData']);
+        await TokenStorage.saveToken(_refreshToken ?? '');
+        // await UserStorage.saveUser(response['userData']);
       }
 
       notifyListeners();
@@ -61,8 +59,8 @@ class AuthProvider with ChangeNotifier {
         _user = UserData.fromJson(response['userData']);
 
         if (rememberMe) {
-          await TokenStorage.saveToken(_refreshToken!);
-          await UserStorage.saveUser(response['userData']);
+          await TokenStorage.saveToken(_refreshToken ?? '');
+          // await UserStorage.saveUser(response['userData']);
         }
 
         notifyListeners();
@@ -77,26 +75,23 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> logout() async {
     await TokenStorage.removeRefreshToken();
-    await UserStorage.removeUser();
+    // await UserStorage.removeUser();
     _token = null;
     _refreshToken = null;
-    _user = null;
     _rememberMe = false;
     _error = null;
     _isAuthenticated = false;
-    if (_isGoogleLogin) {
+    if (_user?.provider == 'google') {
       try {
-        _isGoogleLogin = false;
         await GoogleSignIn().signOut();
-        notifyListeners();
-        return true;
       } catch (e) {
         print('Error cerrando sesión de Google: $e');
-        return false;
       }
     }
+    final logout = await AuthService.logout(_user?.id ?? '');
+    _user = null;
     notifyListeners();
-    return await AuthService.logout(user?.id ?? '');
+    return logout;
   }
 
   void setUser(UserData? user) {
@@ -106,28 +101,38 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> authGoogle(bool rememberMe) async {
     final response = await GoogleAuthService.signInWithGoogle();
-    String? error = response?['error'];
-    if (error == null && response != null) {
+
+    if (response == null) {
+      _error = "No response from Google Sign-In.";
+      notifyListeners();
+      return false;
+    }
+
+    if (response.containsKey('error')) {
+      _error = response['error'];
+      notifyListeners();
+      return false;
+    }
+
+    if (response.containsKey(Token.access.token) &&
+        response.containsKey(Token.refresh.token) &&
+        response.containsKey('userData')) {
       _token = response[Token.access.token];
       _refreshToken = response[Token.refresh.token];
       _user = UserData.fromJson(response['userData']);
       _isAuthenticated = true;
-      _isGoogleLogin = true;
       _rememberMe = rememberMe;
-
       if (rememberMe) {
         await TokenStorage.saveToken(_refreshToken!);
-        await UserStorage.saveUser(response['userData']);
+        // await UserStorage.saveUser(response['userData']);
       }
 
       notifyListeners();
       return true;
     }
-    if (error != null) {
-      _error = error;
-      notifyListeners();
-      return false;
-    }
+
+    _error = "Invalid response structure.";
+    notifyListeners();
     return false;
   }
 }

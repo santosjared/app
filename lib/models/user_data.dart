@@ -4,6 +4,7 @@ class UserData extends UserModel {
   final String phone;
   final String? password;
   final String? id;
+  final String? provider;
 
   UserData({
     required this.phone,
@@ -12,6 +13,7 @@ class UserData extends UserModel {
     required super.name,
     required super.email,
     required super.lastName,
+    this.provider,
   });
 
   factory UserData.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,7 @@ class UserData extends UserModel {
       phone: json['phone'] ?? '',
       password: json['password'] ?? '',
       id: json['_id'] ?? '',
+      provider: json['provider'] ?? '',
     );
   }
 

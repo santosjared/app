@@ -33,8 +33,9 @@ class AuthService {
 
   static Future<bool> logout(String id) async {
     try {
-      print('user idddddddddddddddddddddddddd $id');
-      await dio.delete('${EnvConfig.apiUrl}auth/logout/$id');
+      final response = await dio.delete('${EnvConfig.apiUrl}/auth/logout/$id');
+      print(response.data);
+      print(response.statusCode);
       return true;
     } catch (e) {
       _handleErrors(e);
