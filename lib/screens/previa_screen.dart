@@ -1,6 +1,6 @@
 import 'package:app/config/env_config.dart';
+import 'package:app/layouts/layout_with_appbar.dart';
 import 'package:app/models/previa_model.dart';
-import 'package:app/widgets/custom_appbar.dart';
 import 'package:dio/dio.dart';
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
@@ -178,9 +178,9 @@ class _PreviaScreen extends State<PreviaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppbar(title: widget.title, loading: false),
-      body: SingleChildScrollView(
+    return LayoutWithAppbar(
+      title: widget.title,
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:app/config/env_config.dart';
+import 'package:app/layouts/layout_with_appbar.dart';
 import 'package:app/models/complaints_client_model.dart';
 import 'package:app/models/complaints_model.dart';
+import 'package:app/models/complaints_response_model.dart';
 import 'package:app/models/kin_model.dart';
 import 'package:app/providers/auth_provider.dart';
 import 'package:app/services/camera_service.dart';
@@ -10,7 +13,6 @@ import 'package:app/services/gallery_service.dart';
 import 'package:app/services/kin_service.dart';
 import 'package:app/services/location_service.dart';
 import 'package:app/utils/validator.dart';
-import 'package:app/widgets/custom_appbar.dart';
 import 'package:app/widgets/render_players.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
@@ -38,6 +40,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   TextEditingController defaultcomplaintsController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController placeController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   final _formKey = GlobalKey<FormState>();
   bool _loading = true;
@@ -49,17 +52,35 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   KinModel? selectedVictim;
 
   List<ComplaintsModel> typeComplaints = [];
+  List<ComplaintsModel> typeComplaints2 = [];
+  String _lastsearch = '';
+  bool _isNull = false;
+
+  bool _loadingMore = false;
+
+  int _total = 0;
+  int _skip = 0;
+  final int _limit = 10;
+
   List<KinModel> kins = [];
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 100 &&
+          !_loadingMore &&
+          typeComplaints.length < _total) {
+        _loadMoreComplaints();
+      }
+    });
   }
 
   _loadData() async {
     final List<KinModel> fetchKins = await kinService.getKin();
-    List<ComplaintsModel> fetchComplaints = [];
+    ComplaintsResponse? fetchComplaints;
     if (widget.complaint == null) {
       fetchComplaints = await complaintsService.getComplaints();
     }
@@ -71,11 +92,63 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
             text: widget.complaint?.name,
           );
         }
-        typeComplaints = fetchComplaints;
+        typeComplaints = fetchComplaints?.result ?? [];
         kins = fetchKins;
         _loading = false;
       });
     }
+  }
+
+  Future<void> _loadMoreComplaints() async {
+    if (_loadingMore) return;
+    setState(() {
+      _loadingMore = true;
+    });
+
+    final ComplaintsResponse? response = await complaintsService.getComplaints(
+      skip: _skip,
+      limit: _limit,
+    );
+
+    if (mounted && response != null) {
+      setState(() {
+        typeComplaints.addAll(response.result);
+        _skip += response.result.length;
+        _loadingMore = false;
+      });
+    } else {
+      setState(() {
+        _loadingMore = false;
+      });
+    }
+  }
+
+  Future<List<ComplaintsModel>> _getDataDB(String value) async {
+    final resutl =
+        typeComplaints2
+            .where(
+              (ComplaintsModel option) =>
+                  option.name.toLowerCase().contains(value.toLowerCase()),
+            )
+            .toList();
+    if (resutl.isNotEmpty) {
+      return resutl;
+    }
+    if (_lastsearch == value) {
+      _isNull = false;
+      return [];
+    }
+    if (!_isNull) {
+      final ComplaintsResponse? response = await complaintsService
+          .getComplaints(name: value, skip: 0, limit: 10);
+      if (response != null && response.result.isNotEmpty) {
+        typeComplaints2 = response.result;
+        return response.result;
+      }
+      _isNull = true;
+      _lastsearch = value;
+    }
+    return [];
   }
 
   void _showMessage(String message) {
@@ -242,7 +315,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
+                    color: Colors.white.withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
@@ -357,10 +430,92 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppbar(title: 'Realizar denuncias', loading: false),
-      body:
+    return LayoutWithAppbar(
+      title: 'Realizar denuncias',
+
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              spreadRadius: 2,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Adjuntar',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ),
+            BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.white,
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+              onTap:
+                  _loading
+                      ? null
+                      : (index) {
+                        if (index == 0) {
+                          _showMediaOptions(context, 'Galería');
+                        } else if (index == 1) {
+                          _showMediaOptions(context, 'Cámara');
+                        } else if (index == 2) {
+                          if (cardsdView
+                              .where((item) => item['tipo'] == 'location')
+                              .isNotEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Solo se puede enviar una ubicacion',
+                                ),
+                              ),
+                            );
+                          } else {
+                            _osmMap(context);
+                          }
+                        } else if (index == 3) {
+                          _sendComplaints();
+                        }
+                      },
+              items: [
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.image, color: Colors.blueAccent),
+                  label: 'Galería',
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.camera_alt, color: Colors.pinkAccent),
+                  label: 'Cámara',
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.place, color: Colors.greenAccent),
+                  label: 'Ubicación',
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.send, color: Colors.lightGreen),
+                  label: 'Enviar',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      child:
           _loading
               ? Center(
                 child: Column(
@@ -382,13 +537,17 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                                   (ComplaintsModel option) => option.name,
                               optionsBuilder: (
                                 TextEditingValue textEditingValue,
-                              ) {
-                                return typeComplaints.where(
+                              ) async {
+                                final resutl = typeComplaints.where(
                                   (ComplaintsModel option) =>
                                       option.name.toLowerCase().contains(
                                         textEditingValue.text.toLowerCase(),
                                       ),
                                 );
+                                if (resutl.isNotEmpty) {
+                                  return resutl;
+                                }
+                                return await _getDataDB(textEditingValue.text);
                               },
                               fieldViewBuilder: (
                                 context,
@@ -424,6 +583,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                                   child: Material(
                                     elevation: 4,
                                     child: ListView.builder(
+                                      controller: _scrollController,
                                       padding: EdgeInsets.zero,
                                       shrinkWrap: true,
                                       itemCount: options.length,
@@ -432,7 +592,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                                             .elementAt(index);
                                         return ListTile(
                                           leading: Image.network(
-                                            option.image,
+                                            '${EnvConfig.apiUrl}/images/${option.image}',
                                             width: 40,
                                             height: 40,
                                             errorBuilder: (
@@ -741,81 +901,6 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                   ),
                 ),
               ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              spreadRadius: 2,
-              offset: const Offset(0, -3),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Adjuntar',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ),
-            BottomNavigationBar(
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: Colors.white,
-              showSelectedLabels: true,
-              showUnselectedLabels: true,
-              onTap:
-                  _loading
-                      ? null
-                      : (index) {
-                        if (index == 0) {
-                          _showMediaOptions(context, 'Galería');
-                        } else if (index == 1) {
-                          _showMediaOptions(context, 'Cámara');
-                        } else if (index == 2) {
-                          if (cardsdView
-                              .where((item) => item['tipo'] == 'location')
-                              .isNotEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Solo se puede enviar una ubicacion',
-                                ),
-                              ),
-                            );
-                          } else {
-                            _osmMap(context);
-                          }
-                        } else if (index == 3) {
-                          _sendComplaints();
-                        }
-                      },
-              items: [
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.image, color: Colors.blueAccent),
-                  label: 'Galería',
-                ),
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.camera_alt, color: Colors.pinkAccent),
-                  label: 'Cámara',
-                ),
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.place, color: Colors.greenAccent),
-                  label: 'Ubicación',
-                ),
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.send, color: Colors.lightGreen),
-                  label: 'Enviar',
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -1,49 +1,44 @@
 import 'package:app/constants/mode.dart';
-import 'package:app/theme/color_scheme.dart';
+import 'package:app/theme/custom_color.dart';
 import 'package:flutter/material.dart';
 
 class CustomTheme {
   ThemeData settingsTheme(Mode themeMode) {
+    final colors = CustomColor(mode: themeMode);
     return (ThemeData(
       brightness:
           themeMode == Mode.lightMode ? Brightness.light : Brightness.dark,
-      primaryColor: ColorsScheme.primary,
-      scaffoldBackgroundColor:
-          themeMode == Mode.lightMode
-              ? ColorsScheme.lightBackground
-              : ColorsScheme.darkBackground,
+      primaryColor: colors.primary.main,
+      scaffoldBackgroundColor: colors.background,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: ColorsScheme.primary,
-          foregroundColor: Colors.white,
-          iconColor: Colors.white,
+          backgroundColor: colors.primary.main,
+          foregroundColor: colors.primary.contrastText,
+          iconColor: colors.primary.contrastText,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: ColorsScheme.primary,
-          iconColor: ColorsScheme.primary,
-          side: BorderSide(color: ColorsScheme.primary),
+          foregroundColor: colors.primary.main,
+          iconColor: colors.primary.main,
+          side: BorderSide(color: colors.primary.main),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        fillColor:
-            themeMode == Mode.lightMode
-                ? ColorsScheme.lightBackground
-                : ColorsScheme.darkBackground,
-        prefixIconColor: ColorsScheme.primary,
-        suffixIconColor: ColorsScheme.primary,
-        labelStyle: TextStyle(color: ColorsScheme.primary),
+        fillColor: colors.background,
+        prefixIconColor: colors.primary.main,
+        suffixIconColor: colors.primary.main,
+        labelStyle: TextStyle(color: colors.primary.main),
         border: OutlineInputBorder(
-          borderSide: BorderSide(color: ColorsScheme.primary),
+          borderSide: BorderSide(color: colors.primary.main),
           borderRadius: BorderRadius.circular(8),
         ),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: ColorsScheme.primary),
+          borderSide: BorderSide(color: colors.primary.main),
           borderRadius: BorderRadius.circular(8),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: ColorsScheme.primary, width: 2),
+          borderSide: BorderSide(color: colors.primary.main, width: 2),
           borderRadius: BorderRadius.circular(8),
         ),
         errorBorder: OutlineInputBorder(
@@ -57,43 +52,17 @@ class CustomTheme {
         hintStyle: TextStyle(color: Colors.grey),
       ),
       textSelectionTheme: TextSelectionThemeData(
-        cursorColor:
-            themeMode == Mode.lightMode
-                ? ColorsScheme.textLight
-                : ColorsScheme.textDark,
-        selectionColor:
-            themeMode == Mode.lightMode
-                ? ColorsScheme.textLight.withOpacity(0.5)
-                : ColorsScheme.textDark.withOpacity(0.5),
-        selectionHandleColor:
-            themeMode == Mode.lightMode
-                ? ColorsScheme.textLight
-                : ColorsScheme.textDark,
+        cursorColor: colors.text,
+        selectionColor: colors.text.withOpacity(0.5),
+        selectionHandleColor: colors.text,
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: ColorsScheme.primary,
+        color: colors.primary.main,
       ),
       textTheme: TextTheme(
-        bodyLarge: TextStyle(
-          color:
-              themeMode == Mode.lightMode
-                  ? ColorsScheme.textLight
-                  : ColorsScheme.textDark,
-        ),
-        bodyMedium: TextStyle(
-          color:
-              themeMode == Mode.lightMode
-                  ? ColorsScheme.textLight
-                  : ColorsScheme.textDark,
-          fontWeight: FontWeight.bold,
-        ),
-        titleMedium: TextStyle(
-          color:
-              themeMode == Mode.lightMode
-                  ? ColorsScheme.textLight
-                  : ColorsScheme.textDark,
-          fontStyle: FontStyle.italic,
-        ),
+        bodyLarge: TextStyle(color: colors.text),
+        bodyMedium: TextStyle(color: colors.text, fontWeight: FontWeight.bold),
+        titleMedium: TextStyle(color: colors.text, fontStyle: FontStyle.italic),
       ),
     ));
   }

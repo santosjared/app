@@ -1,8 +1,8 @@
+import 'package:app/layouts/layout_with_appbar.dart';
 import 'package:app/models/login.dart';
 import 'package:app/models/user_data.dart';
 import 'package:app/providers/auth_provider.dart';
 import 'package:app/services/auth_service.dart';
-import 'package:app/widgets/custom_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:app/utils/validator.dart';
 import 'package:provider/provider.dart';
@@ -59,9 +59,9 @@ class _ResetPassword extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppbar(title: 'Recuperar contraseña', loading: false),
-      body: Padding(
+    return LayoutWithAppbar(
+      title: 'Recuperar contraseña',
+      child: Padding(
         padding: EdgeInsets.all(10.0),
         child: Form(
           key: _formKey,
@@ -109,7 +109,7 @@ class _ResetPassword extends State<ResetPasswordScreen> {
               TextFormField(
                 controller: repitPasswordController,
                 decoration: InputDecoration(
-                  labelText: 'Contraseña',
+                  labelText: 'Repita la contraseña',
                   prefixIcon: Icon(Icons.lock),
                   suffixIcon: IconButton(
                     icon: Icon(

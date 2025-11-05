@@ -4,7 +4,6 @@ import 'package:app/models/user_data.dart';
 import 'package:app/services/auth_service.dart';
 import 'package:app/services/google_auth_service.dart';
 import 'package:app/storage/token_storage.dart';
-// import 'package:app/storage/user_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -28,7 +27,7 @@ class AuthProvider with ChangeNotifier {
     if (response != null) {
       _token = response[Token.access.token];
       _refreshToken = response[Token.refresh.token];
-      _user = UserData.fromJson(response['userData']);
+      _user = UserData.fromJson(response['user']);
       _isAuthenticated = true;
       _rememberMe = rememberMe;
 
@@ -51,21 +50,20 @@ class AuthProvider with ChangeNotifier {
 
     if (tokenTem != null) {
       final response = await AuthService.refreshToken(tokenTem);
-
       if (response != null) {
         _token = response[Token.access.token];
         _refreshToken = response[Token.refresh.token];
         _isAuthenticated = true;
-        _user = UserData.fromJson(response['userData']);
+        _user = UserData.fromJson(response['user']);
 
         if (rememberMe) {
           await TokenStorage.saveToken(_refreshToken ?? '');
-          // await UserStorage.saveUser(response['userData']);
         }
 
         notifyListeners();
         return true;
       }
+      return false;
     }
 
     _isAuthenticated = false;
@@ -75,7 +73,6 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> logout() async {
     await TokenStorage.removeRefreshToken();
-    // await UserStorage.removeUser();
     _token = null;
     _refreshToken = null;
     _rememberMe = false;
@@ -116,15 +113,14 @@ class AuthProvider with ChangeNotifier {
 
     if (response.containsKey(Token.access.token) &&
         response.containsKey(Token.refresh.token) &&
-        response.containsKey('userData')) {
+        response.containsKey('user')) {
       _token = response[Token.access.token];
       _refreshToken = response[Token.refresh.token];
-      _user = UserData.fromJson(response['userData']);
+      _user = UserData.fromJson(response['user']);
       _isAuthenticated = true;
       _rememberMe = rememberMe;
       if (rememberMe) {
         await TokenStorage.saveToken(_refreshToken!);
-        // await UserStorage.saveUser(response['userData']);
       }
 
       notifyListeners();

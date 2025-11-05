@@ -19,10 +19,17 @@ class AuthService {
   }
 
   static Future<Map<dynamic, dynamic>?> refreshToken(String token) async {
+    final Dio plainDio = Dio();
+
     try {
-      final response = await dio.post(
+      final response = await plainDio.post(
         '${EnvConfig.apiUrl}/auth/refresh-token',
         data: {'token': token},
+        options: Options(
+          sendTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 5),
+          headers: {'Content-Type': 'application/json'},
+        ),
       );
       return response.data;
     } catch (e) {

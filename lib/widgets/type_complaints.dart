@@ -1,5 +1,6 @@
 import 'package:app/config/env_config.dart';
 import 'package:app/models/complaints_model.dart';
+import 'package:app/models/complaints_response_model.dart';
 import 'package:app/services/complaints_service.dart';
 import 'package:flutter/material.dart';
 
@@ -12,24 +13,75 @@ class TypeComplaints extends StatefulWidget {
 
 class _TypeComplaints extends State<TypeComplaints> {
   final ComplaintsService complaintsService = ComplaintsService();
+  final ScrollController _scrollController = ScrollController();
+
   List<ComplaintsModel> typeComplaints = [];
 
   bool _loading = true;
+  bool _loadingMore = false;
+
+  int _total = 0;
+  int _skip = 0;
+  final int _limit = 10;
+
   @override
   void initState() {
     super.initState();
     _loadComplaints();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 100 &&
+          !_loadingMore &&
+          typeComplaints.length < _total) {
+        _loadMoreComplaints();
+      }
+    });
   }
 
-  _loadComplaints() async {
-    final List<ComplaintsModel> fetchComplaints =
-        await complaintsService.getComplaints();
-    if (mounted) {
+  Future<void> _loadComplaints() async {
+    final ComplaintsResponse? response = await complaintsService.getComplaints(
+      skip: 0,
+      limit: _limit,
+    );
+
+    if (mounted && response != null) {
       setState(() {
-        typeComplaints = fetchComplaints;
+        typeComplaints = response.result;
+        _total = response.total;
+        _skip = response.result.length;
         _loading = false;
       });
     }
+  }
+
+  Future<void> _loadMoreComplaints() async {
+    if (_loadingMore) return;
+    setState(() {
+      _loadingMore = true;
+    });
+
+    final ComplaintsResponse? response = await complaintsService.getComplaints(
+      skip: _skip,
+      limit: _limit,
+    );
+
+    if (mounted && response != null) {
+      setState(() {
+        typeComplaints.addAll(response.result);
+        _skip += response.result.length;
+        _loadingMore = false;
+      });
+    } else {
+      setState(() {
+        _loadingMore = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   String truncateText(String text, String title, int maxLength) {
@@ -62,13 +114,14 @@ class _TypeComplaints extends State<TypeComplaints> {
         : Padding(
           padding: const EdgeInsets.all(8.0),
           child: GridView.builder(
+            controller: _scrollController,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
               childAspectRatio: childAspectRatio / crossAxisCount,
             ),
-            itemCount: typeComplaints.length,
+            itemCount: typeComplaints.length + (_loadingMore ? 1 : 0),
             itemBuilder: (context, index) {
               var card = typeComplaints[index];
               String truncatedDescription = truncateText(

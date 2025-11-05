@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:app/layouts/layout_with_appbar.dart';
 import 'package:app/services/send_code_service.dart';
 import 'package:app/services/send_email_service.dart';
 import 'package:app/utils/validator.dart';
-import 'package:app/widgets/custom_appbar.dart';
 import 'package:app/widgets/sample_card.dart';
 import 'package:flutter/material.dart';
 
@@ -119,9 +119,9 @@ class _SendToCode extends State<SendToCodeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppbar(title: 'Recuperar Contraseña', loading: false),
-      body: SingleChildScrollView(
+    return LayoutWithAppbar(
+      title: 'Recuperar Contraseña',
+      child: SingleChildScrollView(
         padding: EdgeInsets.all(10.0),
         child: Form(
           key: _formKey,

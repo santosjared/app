@@ -1,6 +1,6 @@
-import 'package:app/config/whatsapp_config.dart';
+import 'package:app/layouts/layout_with_appbar.dart';
 import 'package:app/providers/auth_provider.dart';
-import 'package:app/services/whatsapp_service.dart';
+import 'package:app/theme/custom_color.dart';
 import 'package:app/utils/getinials.dart';
 import 'package:app/widgets/menu_wraper.dart';
 import 'package:app/widgets/type_complaints.dart';
@@ -22,24 +22,6 @@ class _DasboardScreen extends State<DashboardScreen> {
     Navigator.pushReplacementNamed(context, '/login');
   }
 
-  void _openWhatsapp() async {
-    bool succsess = await WhatsappService.openWhatsApp(
-      WhatsappConfig.phone,
-      message: WhatsappConfig.message,
-    );
-    if (!succsess && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Tenemos problemas al abrir whatsapp porfavor intente más tarde.',
-          ),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 4),
-        ),
-      );
-    }
-  }
-
   String _replace(String email, {int maxLength = 36}) {
     if (email.length <= maxLength) return email;
     final visiblePart = email.substring(0, maxLength - 3);
@@ -51,32 +33,17 @@ class _DasboardScreen extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<AuthProvider>(context).user;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inicio'),
-        backgroundColor: Color.fromARGB(255, 0, 142, 150),
-        foregroundColor: Colors.white,
-        actions: [
-          Padding(
-            padding: EdgeInsets.all(10.0),
-            child: ElevatedButton(
-              onPressed: _openWhatsapp,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: Text('Emergecia'),
-            ),
-          ),
-        ],
-      ),
-      body: _content,
+    final colors = CustomColor.of(context);
+    return LayoutWithAppbar(
+      title: 'Inicio',
       drawer: Drawer(
+        backgroundColor: colors.primary.main,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Color.fromARGB(255, 0, 142, 130),
-              ),
+              decoration: BoxDecoration(color: colors.primary.dark),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -95,8 +62,8 @@ class _DasboardScreen extends State<DashboardScreen> {
                     _replace('${user?.name} ${user?.lastName}', maxLength: 30),
                     overflow: TextOverflow.ellipsis,
                     softWrap: false,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: colors.primary.contrastText,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -113,7 +80,10 @@ class _DasboardScreen extends State<DashboardScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.account_circle, color: Colors.teal),
-              title: Text('Perfil'),
+              title: Text(
+                'Perfil',
+                style: TextStyle(color: colors.primary.contrastText),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(
@@ -126,7 +96,10 @@ class _DasboardScreen extends State<DashboardScreen> {
             Divider(),
             ListTile(
               leading: const Icon(Icons.home, color: Colors.pink),
-              title: Text('Inicio'),
+              title: Text(
+                'Inicio',
+                style: TextStyle(color: colors.primary.contrastText),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 setState(() {
@@ -136,7 +109,10 @@ class _DasboardScreen extends State<DashboardScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.create, color: Colors.blueAccent),
-              title: Text('Realizar denucias'),
+              title: Text(
+                'Realizar denucias',
+                style: TextStyle(color: colors.primary.contrastText),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/complaints');
@@ -144,7 +120,10 @@ class _DasboardScreen extends State<DashboardScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.send, color: Colors.blue),
-              title: Text('Denuncias enviadas'),
+              title: Text(
+                'Denuncias enviadas',
+                style: TextStyle(color: colors.primary.contrastText),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 setState(() {
@@ -162,7 +141,10 @@ class _DasboardScreen extends State<DashboardScreen> {
                 Icons.playlist_add_check_circle,
                 color: Colors.green,
               ),
-              title: Text('Denuncias aceptadas'),
+              title: Text(
+                'Denuncias aceptadas',
+                style: TextStyle(color: colors.primary.contrastText),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 setState(() {
@@ -177,7 +159,10 @@ class _DasboardScreen extends State<DashboardScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.query_builder, color: Colors.orange),
-              title: Text('Denuncias en espera'),
+              title: Text(
+                'Denuncias en espera',
+                style: TextStyle(color: colors.primary.contrastText),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 setState(() {
@@ -192,7 +177,10 @@ class _DasboardScreen extends State<DashboardScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.error, color: Colors.red),
-              title: Text('Denuncias rechazadas'),
+              title: Text(
+                'Denuncias rechazadas',
+                style: TextStyle(color: colors.primary.contrastText),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 setState(() {
@@ -208,7 +196,10 @@ class _DasboardScreen extends State<DashboardScreen> {
             Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Cerrar sesión'),
+              title: Text(
+                'Cerrar sesión',
+                style: TextStyle(color: colors.primary.contrastText),
+              ),
               onTap: () {
                 _logout();
               },
@@ -216,6 +207,7 @@ class _DasboardScreen extends State<DashboardScreen> {
           ],
         ),
       ),
+      child: _content,
     );
   }
 }

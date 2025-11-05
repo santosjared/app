@@ -1,5 +1,5 @@
+import 'package:app/layouts/blank_layout.dart';
 import 'package:app/providers/auth_provider.dart';
-import 'package:app/theme/color_scheme.dart';
 import 'package:app/widgets/custom_divider.dart';
 import 'package:app/widgets/sample_card.dart';
 import 'package:flutter/material.dart';
@@ -84,8 +84,8 @@ class _LoginScreenState extends State<LoginScreen> {
         SystemNavigator.pop();
         return;
       },
-      child: Scaffold(
-        body: SafeArea(
+      child: BlankLayout(
+        child: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -93,7 +93,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sección del título
                   Center(
                     child: Text(
                       'BIENVENIDO A RADIO PATRULLA 110 POTOSÍ - BOLIVIA',
@@ -101,7 +100,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: ColorsScheme.primary,
                       ),
                     ),
                   ),
@@ -245,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/register');
+                          Navigator.pushNamed(context, '/register');
                         },
                         child: const Text('Registrarse'),
                       ),
@@ -259,6 +257,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
-  sendTokenToBackend(String? token) {}
 }

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:app/config/http.dart';
 import 'package:app/models/complaints_client_model.dart';
-import 'package:app/models/complaints_model.dart';
+import 'package:app/models/complaints_response_model.dart';
 import 'package:app/models/previa_model.dart';
 import 'package:app/utils/forma_data_complaints.dart';
 import 'package:dio/dio.dart';
@@ -23,19 +23,23 @@ class ComplaintsService {
     }
   }
 
-  Future<List<ComplaintsModel>> getComplaints() async {
+  Future<ComplaintsResponse?> getComplaints({
+    String name = '',
+    int skip = 0,
+    int limit = 10,
+  }) async {
     try {
-      final response = await dio.get('/complaints/type-complaints');
-
-      if (response.statusCode == HttpStatus.ok && response.data is List) {
-        return (response.data as List).map((jsonItem) {
-          return ComplaintsModel.fromJson(jsonItem);
-        }).toList();
+      final response = await dio.get(
+        '/complaints/type-complaints',
+        queryParameters: {'name': name, 'skip': skip, 'limit': limit},
+      );
+      if (response.statusCode == HttpStatus.ok) {
+        return ComplaintsResponse.fromJson(response.data);
       }
-      return [];
+      return null;
     } catch (e) {
       print('Error fetching complaints: $e');
-      return [];
+      return null;
     }
   }
 
@@ -45,7 +49,7 @@ class ComplaintsService {
   ) async {
     try {
       final response = await dio.get(
-        '/complaints-client?userId=$userId&status=${status ?? ''}',
+        '/complaints-client/findcomplaintofuser?userId=$userId&status=${status ?? ''}',
       );
       if (response.statusCode == HttpStatus.ok && response.data is List) {
         return (response.data as List).map((jsonItem) {

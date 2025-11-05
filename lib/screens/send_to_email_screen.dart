@@ -1,6 +1,6 @@
+import 'package:app/layouts/layout_with_appbar.dart';
 import 'package:app/services/send_email_service.dart';
 import 'package:app/utils/validator.dart';
-import 'package:app/widgets/custom_appbar.dart';
 import 'package:app/widgets/sample_card.dart';
 import 'package:flutter/material.dart';
 
@@ -47,9 +47,9 @@ class _SendToEmail extends State<SendToEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppbar(title: 'Recuperar Contraseña', loading: false),
-      body: Padding(
+    return LayoutWithAppbar(
+      title: 'Recuperar Contraseña',
+      child: Padding(
         padding: EdgeInsets.all(10.0),
         child: Form(
           key: _formKey,
