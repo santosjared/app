@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:app/config/http.dart';
 import 'package:app/models/complaints_client_model.dart';
+import 'package:app/models/complaints_model.dart';
 import 'package:app/models/complaints_response_model.dart';
 import 'package:app/models/previa_model.dart';
 import 'package:app/utils/forma_data_complaints.dart';
@@ -33,9 +34,27 @@ class ComplaintsService {
         '/complaints/type-complaints',
         queryParameters: {'name': name, 'skip': skip, 'limit': limit},
       );
+
       if (response.statusCode == HttpStatus.ok) {
-        return ComplaintsResponse.fromJson(response.data);
+        final data = response.data;
+
+        // Convertimos el JSON a ComplaintsResponse normal
+        final complaintsResponse = ComplaintsResponse.fromJson(data);
+
+        // Agregamos el tipo “Otro” manualmente
+        complaintsResponse.result.add(
+          ComplaintsModel(
+            id: 'Other',
+            name: 'Otro',
+            image: '',
+            description: '',
+          ),
+        );
+
+        // Retornamos el objeto final
+        return complaintsResponse;
       }
+
       return null;
     } catch (e) {
       print('Error fetching complaints: $e');

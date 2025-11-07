@@ -204,14 +204,16 @@ class _PreviaScreen extends State<PreviaScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       if (widget.data.aggressor != null &&
-                          widget.data.otherAggresor == '')
+                          !widget.data.otherAggresor!.isNotEmpty)
                         _infoTile('Agresor', widget.data.aggressor!.name),
-                      if (widget.data.otherAggresor != '')
+                      if (widget.data.otherAggresor != null &&
+                          widget.data.otherAggresor!.isNotEmpty)
                         _infoTile('Agresor', widget.data.otherAggresor!),
                       if (widget.data.victim != null &&
-                          widget.data.otherVictim == '')
+                          !widget.data.otherAggresor!.isNotEmpty)
                         _infoTile('Víctima', widget.data.victim!.name),
-                      if (widget.data.otherVictim != '')
+                      if (widget.data.otherVictim != null &&
+                          widget.data.otherVictim!.isNotEmpty)
                         _infoTile('Víctima', widget.data.otherVictim!),
                     ],
                   ),
@@ -289,7 +291,7 @@ class _PreviaScreen extends State<PreviaScreen> {
                 },
               ),
             SizedBox(height: 5),
-            if (widget.data.video != null)
+            if (widget.data.video != null && widget.data.video != '')
               videoError
                   ? Card(
                     color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.8),

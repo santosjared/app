@@ -1,5 +1,6 @@
 import 'package:app/layouts/blank_layout.dart';
 import 'package:app/providers/auth_provider.dart';
+import 'package:app/theme/custom_color.dart';
 import 'package:app/widgets/custom_divider.dart';
 import 'package:app/widgets/sample_card.dart';
 import 'package:flutter/material.dart';
@@ -78,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = CustomColor.of(context);
     return PopScope(
       canPop: false, // Impide que se pueda navegar hacia atrás
       onPopInvokedWithResult: (didPop, result) async {
@@ -227,6 +229,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: Colors.red,
                       ),
                       label: const Text("Google"),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/emergency');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.error.main,
+                      ),
+                      child: Text('Emergencia'),
                     ),
                   ),
                   const SizedBox(height: 10),

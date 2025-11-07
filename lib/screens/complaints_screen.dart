@@ -11,7 +11,6 @@ import 'package:app/services/camera_service.dart';
 import 'package:app/services/complaints_service.dart';
 import 'package:app/services/gallery_service.dart';
 import 'package:app/services/kin_service.dart';
-import 'package:app/services/location_service.dart';
 import 'package:app/utils/validator.dart';
 import 'package:app/widgets/render_players.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +29,6 @@ class ComplaintsScreen extends StatefulWidget {
 class _ComplaintsScreenState extends State<ComplaintsScreen> {
   final GalleryService galleryService = GalleryService();
   final CameraService camareService = CameraService();
-  final LocationService locationService = LocationService();
   final ComplaintsService complaintsService = ComplaintsService();
   final KinService kinService = KinService();
 

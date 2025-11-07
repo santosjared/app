@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
@@ -26,16 +27,33 @@ class LocationService {
 
   Future<Position> getCurrentLocation() async {
     await _checkPermissions();
-    return await Geolocator.getCurrentPosition();
+
+    const locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: 0,
+    );
+
+    return await Geolocator.getCurrentPosition(
+      locationSettings: locationSettings,
+    );
   }
 
   Stream<Position> getLocationStream() async* {
     await _checkPermissions();
-    yield* Geolocator.getPositionStream(
-      locationSettings: LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
-      ),
+
+    const locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
     );
+
+    yield* Geolocator.getPositionStream(locationSettings: locationSettings);
+  }
+
+  Stream<ServiceStatus> getServiceStatusStream() {
+    return Geolocator.getServiceStatusStream();
+  }
+
+  Future<bool> isGpsEnabled() async {
+    return await Geolocator.isLocationServiceEnabled();
   }
 }

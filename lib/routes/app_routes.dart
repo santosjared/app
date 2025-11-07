@@ -2,6 +2,7 @@ import 'package:app/models/complaints_client_model.dart';
 import 'package:app/models/complaints_model.dart';
 import 'package:app/models/previa_model.dart';
 import 'package:app/screens/complaints_screen.dart';
+import 'package:app/screens/emergency_screen.dart';
 import 'package:app/screens/login_screen.dart';
 import 'package:app/screens/previa_screen.dart';
 import 'package:app/screens/profile_screen.dart';
@@ -23,6 +24,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => DashboardScreen());
       case "/register":
         return MaterialPageRoute(builder: (_) => RegisterUserScreen());
+      case "/emergency":
+        return MaterialPageRoute(builder: (_) => EmergencyScreen());
       case "/login":
         return MaterialPageRoute(builder: (_) => LoginScreen());
       case "/send-email":
