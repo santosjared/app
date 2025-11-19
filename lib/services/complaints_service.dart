@@ -32,16 +32,12 @@ class ComplaintsService {
     try {
       final response = await dio.get(
         '/complaints/type-complaints',
-        queryParameters: {'name': name, 'skip': skip, 'limit': limit},
+        queryParameters: {'field': name, 'skip': skip, 'limit': limit},
       );
 
       if (response.statusCode == HttpStatus.ok) {
         final data = response.data;
-
-        // Convertimos el JSON a ComplaintsResponse normal
         final complaintsResponse = ComplaintsResponse.fromJson(data);
-
-        // Agregamos el tipo “Otro” manualmente
         complaintsResponse.result.add(
           ComplaintsModel(
             id: 'Other',

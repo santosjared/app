@@ -35,8 +35,8 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     Login user = Login(
-      email: emailController.text,
-      password: passwordController.text,
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
     );
 
     bool success = await authProvider.login(user, rememberMe);

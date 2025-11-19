@@ -47,7 +47,7 @@ class _MenuWraperState extends State<MenuWraper> {
     late String description;
 
     switch (status) {
-      case 'accepted':
+      case 'acepted':
         color = Colors.greenAccent;
         title = 'Denuncia aceptada';
         description =

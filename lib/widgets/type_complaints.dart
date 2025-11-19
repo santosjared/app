@@ -51,6 +51,10 @@ class _TypeComplaints extends State<TypeComplaints> {
         _skip = response.result.length;
         _loading = false;
       });
+    } else {
+      setState(() {
+        _loading = false;
+      });
     }
   }
 
