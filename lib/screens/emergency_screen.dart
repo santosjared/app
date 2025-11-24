@@ -30,6 +30,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   bool _isLoadingSend = false;
   bool _isReadyMap = false;
   String? _errorMessage;
+  String? _phoneError;
 
   @override
   void initState() {
@@ -40,7 +41,6 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     }
   }
 
-  /// 🔁 Escucha cambios del GPS (ON/OFF)
   void _listenGpsStatus() {
     _gpsStatusSubscription = _locationService.getServiceStatusStream().listen((
       status,
@@ -68,7 +68,6 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
 
     try {
       final position = await _locationService.getCurrentLocation();
-
       if (!mounted) return;
 
       final userGeoPoint = GeoPoint(
@@ -81,8 +80,21 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      print(e);
 
+      if (!mounted) return;
+      if (e == 'deniedForever') {
+        _showMessage(
+          "Debe habilitar los permisos de ubicación desde Configuración.",
+        );
+
+        await Geolocator.openAppSettings();
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString();
+        });
+        return;
+      }
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString();
@@ -115,7 +127,13 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                   labelText: 'Contacto (opcional)',
                   enabled: !_isLoadingSend,
                   border: OutlineInputBorder(),
+                  errorText: _phoneError,
                 ),
+                onChanged: (_) {
+                  if (_phoneError != null) {
+                    setState(() => _phoneError = null);
+                  }
+                },
               ),
               const SizedBox(height: 16),
               _isLoadingSend
@@ -210,18 +228,25 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
 
   Future<void> _enviar() async {
     if (!mounted) return;
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    if (_currentPosition == null &&
+        phoneController.text.trim().isEmpty &&
+        user?.id == null) {
+      setState(() {
+        _phoneError = "Debe proporcionar un número de contacto";
+      });
+      return;
+    }
     setState(() {
       _isLoadingSend = true;
     });
-    if (_currentPosition == null) {
-      _showMessage("No se pudo obtener la ubicación.");
-      return;
-    }
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
+
     final data = {
-      "userId": user != null ? user.id : '',
-      "latitude": _currentPosition!.latitude,
-      "longitude": _currentPosition!.longitude,
+      "userId": user?.id ?? '',
+      if (_currentPosition != null) ...{
+        "latitude": _currentPosition?.latitude,
+        "longitude": _currentPosition?.longitude,
+      },
       "contact": phoneController.text.trim(),
     };
 
@@ -240,6 +265,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
         );
         _showMessage("Error al enviar la emergencia. Intente nuevamente.");
       }
+      setState(() {
+        _isLoadingSend = false;
+      });
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout) {
         _showMessage("Tiempo de conexión agotado. Revisa tu red.");
@@ -250,14 +278,17 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
       } else {
         _showMessage("Error de conexión. Verifica tu red o GPS.");
       }
+      setState(() {
+        _isLoadingSend = false;
+      });
     } catch (e) {
       _showMessage(
         "No se pudo enviar la ubicación. Comuníquese con 110 Radio Patrullas.",
       );
+      setState(() {
+        _isLoadingSend = false;
+      });
     }
-    setState(() {
-      _isLoadingSend = false;
-    });
   }
 
   @override

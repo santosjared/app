@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:app/config/env_config.dart';
@@ -11,10 +12,12 @@ import 'package:app/services/camera_service.dart';
 import 'package:app/services/complaints_service.dart';
 import 'package:app/services/gallery_service.dart';
 import 'package:app/services/kin_service.dart';
+import 'package:app/services/location_service.dart';
 import 'package:app/utils/validator.dart';
 import 'package:app/widgets/render_players.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -48,6 +51,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   ComplaintsModel? selectedComplaint;
   KinModel? selectedAggressor;
   KinModel? selectedVictim;
+  final LocationService _locationService = LocationService();
+  late final MapController mapController = MapController.withUserPosition(
+    trackUserLocation: UserTrackingOption(enableTracking: false),
+  );
 
   List<ComplaintsModel> typeComplaints = [];
   List<ComplaintsModel> typeComplaints2 = [];
@@ -236,124 +243,59 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     );
   }
 
-  MapController mapController = MapController(
-    initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
-    areaLimit: BoundingBox(
-      east: 10.4922941,
-      north: 47.8084648,
-      south: 45.817995,
-      west: 5.9559113,
-    ),
-  );
+  _osmMap() async {
+    try {
+      final position = await _locationService.getCurrentLocation();
+      final locationMap = {
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+      };
+      if (!mounted) return;
+      setState(() {
+        cardsdView.add({'tipo': 'location', 'data': jsonEncode(locationMap)});
+      });
+    } catch (e) {
+      print(e);
+      if (!mounted) return;
 
-  _osmMap(BuildContext context) {
+      final errorStr = e.toString();
+
+      if (errorStr.contains('denegados permanentemente') ||
+          errorStr.contains('deniedForever')) {
+        await Geolocator.openAppSettings();
+      } else if (errorStr.contains('deshabilitados') ||
+          errorStr.contains('disabled')) {
+        _showEnableLocationDialog(context);
+      } else if (errorStr.contains('denegados') ||
+          errorStr.contains('denied')) {
+        _showMessage("Permiso de ubicación denegado.");
+      } else {
+        _showMessage("No se pudo obtener la ubicación.");
+      }
+    }
+  }
+
+  void _showEnableLocationDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
-        return Dialog.fullscreen(
-          child: Stack(
-            children: [
-              OSMFlutter(
-                controller: mapController,
-                mapIsLoading: Center(child: CircularProgressIndicator()),
-                osmOption: OSMOption(
-                  userTrackingOption: UserTrackingOption(
-                    enableTracking: true,
-                    unFollowUser: false,
-                  ),
-                  zoomOption: ZoomOption(
-                    initZoom: 16,
-                    minZoomLevel: 3,
-                    maxZoomLevel: 19,
-                    stepZoom: 1.0,
-                  ),
-                  userLocationMarker: UserLocationMaker(
-                    personMarker: MarkerIcon(
-                      icon: Icon(
-                        Icons.location_on,
-                        color: Colors.red,
-                        size: 96,
-                      ),
-                    ),
-                    directionArrowMarker: MarkerIcon(
-                      iconWidget: Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.red, width: 5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.navigation, // ícono de flecha estilo brújula
-                            color: Colors.red,
-                            size: 96,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  roadConfiguration: RoadOption(roadColor: Colors.yellowAccent),
-                ),
-              ),
-
-              Positioned(
-                bottom: 20,
-                left: 20,
-                right: 20,
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.my_location, color: Colors.blue),
-                        title: Text('Ubicación actual'),
-                        onTap: () async {
-                          Navigator.pop(context);
-                          try {
-                            final location = await mapController.myLocation();
-                            final locationMap = {
-                              'latitude': location.latitude,
-                              'longitude': location.longitude,
-                            };
-                            setState(() {
-                              cardsdView.add({
-                                'tipo': 'location',
-                                'data': jsonEncode(locationMap),
-                              });
-                            });
-                          } catch (e) {
-                            _showMessage('Error al obtener la ubicación ');
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+        return AlertDialog(
+          title: Text("Ubicación deshabilitada"),
+          content: Text("Para agregar la ubicación, debes activar el GPS."),
+          actions: [
+            TextButton(
+              child: Text("Cancelar"),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: Text("Activar GPS"),
+              onPressed: () {
+                Navigator.pop(context);
+                Geolocator.openLocationSettings();
+              },
+            ),
+          ],
         );
       },
     );
@@ -468,7 +410,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
               onTap:
                   _loading
                       ? null
-                      : (index) {
+                      : (index) async {
                         if (index == 0) {
                           _showMediaOptions(context, 'Galería');
                         } else if (index == 1) {
@@ -485,7 +427,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                               ),
                             );
                           } else {
-                            _osmMap(context);
+                            await _osmMap();
                           }
                         } else if (index == 3) {
                           _sendComplaints();
@@ -879,9 +821,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                           decoration: InputDecoration(
                             labelText: 'Lugar del hecho (opcional)',
                             prefixIcon: GestureDetector(
-                              onTap: () {
-                                _osmMap(context);
-                              },
+                              // onTap: _osmMap,
                               child: Icon(Icons.place_outlined),
                             ),
                           ),
