@@ -64,13 +64,14 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success) {
       Navigator.pushReplacementNamed(context, '/');
     } else {
+      final colors = CustomColor.of(context);
       final errorMessage =
           authProvider.error ??
           'Tenemos algunos problrmas al iniciar sesión con Google. Por favor, inténtelo más tarde.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
-          backgroundColor: Colors.red,
+          backgroundColor: colors.primary.main,
           duration: const Duration(seconds: 4),
         ),
       );
@@ -97,7 +98,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Center(
                     child: Text(
-                      'BIENVENIDO A RADIO PATRULLA 110 POTOSÍ - BOLIVIA',
+                      'BIENVENIDO A RADIO PATRULLA 110',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Center(
+                    child: Text(
+                      'POTOSÍ - BOLIVIA',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 24,

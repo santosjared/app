@@ -316,7 +316,7 @@ class _DasboardScreen extends State<DashboardScreen> {
               ListTile(
                 leading: const Icon(Icons.create, color: Colors.blueAccent),
                 title: Text(
-                  'Realizar denucias',
+                  'Realizar Denuncias',
                   style: TextStyle(color: colors.primary.contrastText),
                 ),
                 onTap: () {
@@ -327,7 +327,7 @@ class _DasboardScreen extends State<DashboardScreen> {
               ListTile(
                 leading: const Icon(Icons.send, color: Colors.blue),
                 title: Text(
-                  'Denuncias enviadas',
+                  'Denuncias Enviadas',
                   style: TextStyle(color: colors.primary.contrastText),
                 ),
                 onTap: () {
@@ -337,7 +337,7 @@ class _DasboardScreen extends State<DashboardScreen> {
                       key: UniqueKey(),
                       userId: user?.id ?? '',
                       status: null,
-                      title: 'Todas las denuncias',
+                      title: 'Todas las Denuncias',
                     );
                   });
                 },
@@ -348,7 +348,7 @@ class _DasboardScreen extends State<DashboardScreen> {
                   color: Colors.green,
                 ),
                 title: Text(
-                  'Denuncias aceptadas',
+                  'Denuncias Aceptadas',
                   style: TextStyle(color: colors.primary.contrastText),
                 ),
                 onTap: () {
@@ -358,7 +358,7 @@ class _DasboardScreen extends State<DashboardScreen> {
                       key: UniqueKey(),
                       userId: user?.id ?? '',
                       status: 'acepted',
-                      title: 'Denuncias aceptadas',
+                      title: 'Denuncias Aceptadas',
                     );
                   });
                 },
@@ -366,7 +366,7 @@ class _DasboardScreen extends State<DashboardScreen> {
               ListTile(
                 leading: const Icon(Icons.query_builder, color: Colors.orange),
                 title: Text(
-                  'Denuncias en espera',
+                  'Denuncias en Espera',
                   style: TextStyle(color: colors.primary.contrastText),
                 ),
                 onTap: () {
@@ -376,7 +376,7 @@ class _DasboardScreen extends State<DashboardScreen> {
                       key: UniqueKey(),
                       userId: user?.id ?? '',
                       status: 'waiting',
-                      title: 'Denuncias en espera',
+                      title: 'Denuncias en Espera',
                     );
                   });
                 },
@@ -384,7 +384,7 @@ class _DasboardScreen extends State<DashboardScreen> {
               ListTile(
                 leading: const Icon(Icons.error, color: Colors.red),
                 title: Text(
-                  'Denuncias rechazadas',
+                  'Denuncias Rechazadas',
                   style: TextStyle(color: colors.primary.contrastText),
                 ),
                 onTap: () {
@@ -394,7 +394,7 @@ class _DasboardScreen extends State<DashboardScreen> {
                       key: UniqueKey(),
                       userId: user?.id ?? '',
                       status: 'refused',
-                      title: 'Denuncias rechazadas',
+                      title: 'Denuncias Rechazadas',
                     );
                   });
                 },
@@ -403,7 +403,7 @@ class _DasboardScreen extends State<DashboardScreen> {
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
                 title: Text(
-                  'Cerrar sesión',
+                  'Cerrar Sesión',
                   style: TextStyle(color: colors.primary.contrastText),
                 ),
                 onTap: () {
