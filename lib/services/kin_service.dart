@@ -16,8 +16,6 @@ class KinService {
                 return KinModel(name: item.toString());
               }
             }).toList();
-
-        // Agregamos un ítem adicional "Otro" al final
         kinList.add(KinModel(id: 'Other', name: 'Otro'));
 
         return kinList;

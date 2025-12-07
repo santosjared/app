@@ -46,8 +46,6 @@ class ComplaintsService {
             description: '',
           ),
         );
-
-        // Retornamos el objeto final
         return complaintsResponse;
       }
 
