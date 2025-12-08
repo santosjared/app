@@ -207,12 +207,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/send-email');
-                        },
-                        child: const Text('¿Olvidó su contraseña?'),
-                      ),
+                      // TextButton(
+                      //   onPressed: () {
+                      //     Navigator.pushNamed(context, '/send-email');
+                      //   },
+                      //   child: const Text('¿Olvidó su contraseña?'),
+                      // ),
                     ],
                   ),
                   const SizedBox(height: 10),
